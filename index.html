@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificador de Inventario - BIA Honduras</title>
+    <link rel="icon" href="https://github.com/BiaHonduras/home/blob/main/favicon.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        header img {
+            display: inline-block;
+            max-width: 100%;
+            height: auto;
+        }
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 10px auto;
+            width: 200px;
+            display: block;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005fa3;
+        }
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #555;
+            background-color: #eaeaea;
+        }
+    </style>
+</head>
+<body>
+
+<header style="text-align: center;">
+    <img src="https://raw.githubusercontent.com/BiaHonduras/home/main/BiaNL.png" alt="BIA Honduras">
+</header>
+
+<div class="container">
+    <h2 style="text-align: center;"> Base de Datos - Inventario </h2>
+    <p style="text-align: center;"> Ingrese su Usuario y Contraseña para acceder </p>
+    <select id="usuario">
+        <option value="vendedor">Vendedores</option>
+        <option value="bodega">Bodega</option>
+    </select>
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <p style="text-align: center;"> <a href="#" onclick="alert('Para obtener la contraseña no olvides comunicarte con el Controlador de Inventario.')">Se me olvidó la contraseña</a></p>
+    <p id="loginError" style="color:red;"></p>
+</div>
+
+<footer style="text-align: center;">
+    Creado por Hernán Manuel Pérez Banegas - Verificador de Inventarios SPS - Bia Honduras
+</footer>
+
+<script>
+    function login() {
+        const user = document.getElementById("usuario").value;
+        const pass = document.getElementById("password").value;
+        if (user === "vendedor" && pass === "Ventas123") {
+            window.location.href = "vendedores.html";
+        } else if (user === "bodega" && pass === "Logistica123") {
+            window.location.href = "bodega.html";
+        } else {
+            document.getElementById("loginError").textContent = "Usuario o contraseña incorrecta.";
+        }
+    }
+</script>
+</body>
+</html>

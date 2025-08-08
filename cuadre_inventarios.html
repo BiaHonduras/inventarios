@@ -7,10 +7,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
             background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
             background-size: cover;
-            background-attachment: fixed;
+            margin: 20px;
         }
         .header-img {
             text-align: center;
@@ -32,51 +31,32 @@
         }
         .form-section {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: space-around;
+            align-items: flex-start;
             margin: 20px 0;
         }
-        .form-section input[type="number"] {
-            width: 100px;
+        .form-section input[type="number"], .form-section input[type="text"] {
+            width: 120px;
             padding: 5px;
         }
         .image-preview {
             text-align: center;
-            margin: 10px 0;
         }
         .image-preview img {
             max-width: 150px;
         }
-        .inputs-left {
+        .total {
             text-align: left;
             margin-top: 10px;
-        }
-        .description-section {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .description-section label {
-            margin-right: 10px;
             font-weight: bold;
         }
-        .description-section input {
-            width: 300px;
-            padding: 5px;
-        }
-        .total {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .buttons {
+        .save-button, .exit-button {
             text-align: center;
             margin: 20px 0;
         }
-        .buttons button {
+        .save-button button, .exit-button button {
             padding: 10px 20px;
             font-size: 16px;
-            margin: 0 10px;
         }
         table {
             width: 100%;
@@ -94,6 +74,39 @@
         th {
             background-color: #f2f2f2;
         }
+        .action-buttons button {
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .green-button {
+            background-color: green;
+            color: white;
+        }
+        .red-button {
+            background-color: red;
+            color: white;
+        }
+        #editModal {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 40%;
+            background-color: white;
+            border: 2px solid #444;
+            padding: 20px;
+            z-index: 1000;
+        }
+        #editModal input {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+            padding: 5px;
+        }
+        #editModalButtons {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -108,18 +121,20 @@
     <div class="form-section">
         <div>
             <label>Código del artículo:</label><br>
-            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7); actualizarDescripcion();">
+            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
+            <button onclick="buscarDescripcion()">Buscar</button>
+            <br><br>
+            <div class="image-preview">
+                <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
+            </div>
         </div>
-        <div class="image-preview">
-            <img src="https://raw.githubusercontent.com/BiaHonduras/home/inventarios/Chocale.png" alt="Imagen del artículo">
-        </div>
-        <div class="inputs-left">
+        <div>
             <label>Cajas / Fardos:</label><br>
-            <input type="number" id="cajas" oninput="calcularTotal()"><br><br>
+            <input type="number" id="cajas" oninput="calcularTotal()">
+            <br><br>
             <label>Unidades:</label><br>
             <input type="number" id="unidades" oninput="calcularTotal()">
-        </div>
-        <div class="description-section">
+            <br><br>
             <label>Descripción del Artículo:</label>
             <input type="text" id="descripcion" readonly>
         </div>
@@ -129,9 +144,12 @@
         Total de Unidades: <span id="total-unidades">0</span>
     </div>
 
-    <div class="buttons">
+    <div class="save-button">
         <button onclick="guardar()">Guardar</button>
-        <button onclick="salir()">Salir</button>
+    </div>
+
+    <div class="exit-button">
+        <button onclick="window.location.href='index.html'">Salir</button>
     </div>
 
     <table>
@@ -147,14 +165,49 @@
                 <th>Total Unidades</th>
                 <th>Diferencia</th>
                 <th>Justificación</th>
+                <th>Acciones</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="data-table">
+            <tr>
+                <td>Proveedor A</td>
+                <td>1234567</td>
+                <td>Producto A</td>
+                <td>100</td>
+                <td>12</td>
+                <td>5</td>
+                <td>3</td>
+                <td>63</td>
+                <td>-37</td>
+                <td>Revisión pendiente</td>
+                <td class="action-buttons">
+                    <button class="green-button" onclick="editarFila(this)">Editar</button>
+                    <button class="red-button">Eliminar</button>
+                </td>
+            </tr>
         </tbody>
     </table>
 
+    <div id="editModal">
+        <h3>Editar Información</h3>
+        <input type="text" id="editProveedor">
+        <input type="text" id="editCodigo">
+        <input type="text" id="editDescripcion">
+        <input type="number" id="editReporte">
+        <input type="number" id="editFactor">
+        <input type="number" id="editCajas">
+        <input type="number" id="editUnidades">
+        <input type="number" id="editTotal">
+        <input type="number" id="editDiferencia">
+        <input type="text" id="editJustificacion">
+        <div id="editModalButtons">
+            <button onclick="aceptarEdicion()">Aceptar</button>
+            <button onclick="cancelarEdicion()">Cancelar</button>
+        </div>
+    </div>
+
     <script>
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES');
+        document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
 
         function limitDigits(input, maxDigits) {
             if (input.value.length > maxDigits) {
@@ -174,20 +227,48 @@
             alert("Datos guardados (simulado).");
         }
 
-        function salir() {
-            window.location.href = "index.html";
+        function buscarDescripcion() {
+            const codigo = document.getElementById('codigo').value;
+            fetch('bdd_bodega.json')
+                .then(response => response.json())
+                .then(data => {
+                    const item = data.find(d => d.codigo === codigo);
+                    document.getElementById('descripcion').value = item ? item.descripcion : "No encontrado";
+                });
         }
 
-        async function actualizarDescripcion() {
-            const codigo = document.getElementById('codigo').value;
-            try {
-                const response = await fetch('bodega.json');
-                const data = await response.json();
-                const item = data.find(d => d.codigo === codigo);
-                document.getElementById('descripcion').value = item ? item.descripcion : '';
-            } catch (error) {
-                console.error("Error al cargar bodega.json:", error);
-            }
+        let currentRow = null;
+
+        function editarFila(button) {
+            currentRow = button.closest('tr');
+            const cells = currentRow.querySelectorAll('td');
+            document.getElementById('editProveedor').value = cells[0].textContent;
+            document.getElementById('editCodigo').value = cells[1].textContent;
+            document.getElementById('editDescripcion').value = cells[2].textContent;
+            document.getElementById('editReporte').value = cells[3].textContent;
+            document.getElementById('editFactor').value = cells[4].textContent;
+            document.getElementById('editCajas').value = cells[5].textContent;
+            document.getElementById('editUnidades').value = cells[6].textContent;
+            document.getElementById('editTotal').value = cells[7].textContent;
+            document.getElementById('editDiferencia').value = cells[8].textContent;
+            document.getElementById('editJustificacion').value = cells[9].textContent;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function aceptarEdicion() {
+            const inputs = [
+                'editProveedor', 'editCodigo', 'editDescripcion', 'editReporte',
+                'editFactor', 'editCajas', 'editUnidades', 'editTotal',
+                'editDiferencia', 'editJustificacion'
+            ];
+            inputs.forEach((id, index) => {
+                currentRow.cells[index].textContent = document.getElementById(id).value;
+            });
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('editModal').style.display = 'none';
         }
     </script>
 

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cuadre de Inventarios Diario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header-img {
+            text-align: center;
+        }
+        .header-img img {
+            max-width: 300px;
+        }
+        .title {
+            background-color: #d3d3d3;
+            padding: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .date {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .form-section {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .form-section input[type="number"] {
+            width: 100px;
+            padding: 5px;
+        }
+        .image-preview {
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 150px;
+        }
+        .total {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .save-button {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .save-button button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        table, th, td {
+            border: 1px solid #999;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-img">
+        <img src="https://raw.githubusercontent.com/BiaHonduras/home/main/BiaNL.png" alt="Logo">
+    </div>
+
+    <div class="title">Cuadre de Inventarios Diario</div>
+    <div class="date" id="current-date"></div>
+
+    <div class="form-section">
+        <div>
+            <label>Código del artículo:</label><br>
+            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
+        </div>
+        <div class="image-preview">
+            <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
+        </div>
+        <div>
+            <label>Cajas / Fardos:</label><br>
+            <input type="number" id="cajas" oninput="calcularTotal()">
+            <br><br>
+            <label>Unidades:</label><br>
+            <input type="number" id="unidades" oninput="calcularTotal()">
+        </div>
+    </div>
+
+    <div class="total">
+        Total de Unidades: <span id="total-unidades">0</span>
+    </div>
+
+    <div class="save-button">
+        <button onclick="guardar()">Guardar</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Proveedor</th>
+                <th>Código</th>
+                <th>Descripción Artículo</th>
+                <th>Inv. Reportería</th>
+                <th>Factor</th>
+                <th>Conteo Cajas / Fardos</th>
+                <th>Conteo Unidades</th>
+                <th>Total Unidades</th>
+                <th>Diferencia</th>
+                <th>Justificación</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES');
+
+        function limitDigits(input, maxDigits) {
+            if (input.value.length > maxDigits) {
+                input.value = input.value.slice(0, maxDigits);
+            }
+        }
+
+        function calcularTotal() {
+            const factor = 12;
+            const cajas = parseInt(document.getElementById('cajas').value) || 0;
+            const unidades = parseInt(document.getElementById('unidades').value) || 0;
+            const total = (cajas * factor) + unidades;
+            document.getElementById('total-unidades').textContent = total;
+        }
+
+        function guardar() {
+            alert("Datos guardados (simulado).");
+        }
+    </script>
+
+</body>
+</html>

@@ -116,13 +116,8 @@
     </div>
 
     <div class="title">Cuadre de Inventarios Diario</div>
-    
     <script>
-    const hoy = new Date();
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const año = hoy.getFullYear();
-    document.getElementById("current-date").textContent = `Hoy es ${dia}/${mes}/${año}`;
+    <div class="date" id="current-date"></div>
     </script>
 
     <div class="form-section">

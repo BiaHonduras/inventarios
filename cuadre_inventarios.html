@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Cuadre de Inventarios Diario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg') no-repeat center center fixed;
+            margin: 20px;
+            background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
             background-size: cover;
+            background-attachment: fixed;
         }
         .header-img {
             text-align: center;
@@ -31,28 +32,39 @@
         }
         .form-section {
             display: flex;
-            justify-content: space-around;
-            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
             margin: 20px 0;
         }
-        .form-section input[type="number"], .form-section input[type="text"] {
-            width: 120px;
-            padding: 5px;
-        }
-        .image-preview {
+        .form-section > div {
+            margin: 10px;
             text-align: center;
+        }
+        .form-section input[type="number"],
+        .form-section input[type="text"] {
+            width: 150px;
+            padding: 5px;
         }
         .image-preview img {
             max-width: 150px;
         }
+        .description-section {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .description-section textarea {
+            width: 80%;
+            height: 60px;
+            resize: none;
+        }
         .total {
-            text-align: left;
+            text-align: center;
             margin-top: 10px;
             font-weight: bold;
         }
         .save-button, .exit-button {
             text-align: center;
-            margin: 20px 0;
+            margin: 10px 0;
         }
         .save-button button, .exit-button button {
             padding: 10px 20px;
@@ -75,37 +87,68 @@
             background-color: #f2f2f2;
         }
         .action-buttons button {
+            width: 20px;
+            height: 20px;
             margin: 2px;
-            padding: 5px 10px;
-            font-size: 12px;
         }
-        .green-button {
-            background-color: green;
-            color: white;
-        }
-        .red-button {
-            background-color: red;
-            color: white;
-        }
-        #editModal {
+        .modal {
             display: none;
             position: fixed;
-            top: 20%;
-            left: 30%;
-            width: 40%;
+            z-index: 999;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             background-color: white;
+            padding: 15px;
             border: 2px solid #444;
-            padding: 20px;
-            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            width: 300px;
         }
-        #editModal input {
-            display: block;
-            margin: 10px 0;
+        .modal input, .modal textarea {
             width: 100%;
-            padding: 5px;
+            margin-bottom: 10px;
         }
-        #editModalButtons {
+        .modal-buttons {
             text-align: center;
+        }
+        .modal-buttons button {
+            margin: 5px;
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                font-size: 16px;
+                padding: 10px;
+            }
+            .form-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            .image-preview img {
+                max-width: 100px;
+            }
+            table, th, td {
+                font-size: 12px;
+            }
+            .modal {
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
+            .form-section input[type="number"],
+            .form-section input[type="text"] {
+                width: 90%;
+            }
+            .image-preview img {
+                max-width: 80px;
+            }
+            table {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -116,30 +159,31 @@
     </div>
 
     <div class="title">Cuadre de Inventarios Diario</div>
-    <script>
     <div class="date" id="current-date"></div>
-    </script>
 
     <div class="form-section">
         <div>
             <label>Código del artículo:</label><br>
             <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
             <button onclick="buscarDescripcion()">Buscar</button>
-            <br><br>
-            <div class="image-preview">
-                <img src="https://raw.githubusercontent.com/BiaHonduras/home/inventarios/Chocale.png" alt="Imagen del artículo">
-            </div>
         </div>
+        <div class="image-preview">
+            <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
+        </div>
+    </div>
+
+    <div class="form-section">
         <div>
             <label>Cajas / Fardos:</label><br>
-            <input type="number" id="cajas" oninput="calcularTotal()">
-            <br><br>
+            <input type="number" id="cajas" oninput="calcularTotal()"><br><br>
             <label>Unidades:</label><br>
             <input type="number" id="unidades" oninput="calcularTotal()">
-            <br><br>
-            <label>Descripción del Artículo:</label>
-            <input type="text" id="descripcion" readonly>
         </div>
+    </div>
+
+    <div class="description-section">
+        <label>Descripción del Artículo:</label><br>
+        <textarea id="descripcion" readonly></textarea>
     </div>
 
     <div class="total">
@@ -149,7 +193,6 @@
     <div class="save-button">
         <button onclick="guardar()">Guardar</button>
     </div>
-
     <div class="exit-button">
         <button onclick="window.location.href='index.html'">Salir</button>
     </div>
@@ -170,11 +213,11 @@
                 <th>Acciones</th>
             </tr>
         </thead>
-        <tbody id="data-table">
+        <tbody id="tabla-body">
             <tr>
                 <td>Proveedor A</td>
                 <td>1234567</td>
-                <td>Producto A</td>
+                <td>Ejemplo de artículo con descripción larga</td>
                 <td>100</td>
                 <td>12</td>
                 <td>5</td>
@@ -183,33 +226,41 @@
                 <td>-37</td>
                 <td>Revisión pendiente</td>
                 <td class="action-buttons">
-                    <button class="green-button" onclick="editarFila(this)">Editar</button>
-                    <button class="red-button">Eliminar</button>
+                    <button style="background-color:green;" onclick="editarFila(this)">✔</button>
+                    <button style="background-color:red;">✖</button>
                 </td>
             </tr>
         </tbody>
     </table>
 
-    <div id="editModal">
+    <div class="modal" id="modal-edicion">
         <h3>Editar Información</h3>
-        <input type="text" id="editProveedor">
-        <input type="text" id="editCodigo">
-        <input type="text" id="editDescripcion">
-        <input type="number" id="editReporte">
-        <input type="number" id="editFactor">
-        <input type="number" id="editCajas">
-        <input type="number" id="editUnidades">
-        <input type="number" id="editTotal">
-        <input type="number" id="editDiferencia">
-        <input type="text" id="editJustificacion">
-        <div id="editModalButtons">
+        <input type="text" id="modal-proveedor">
+        <input type="text" id="modal-codigo">
+        <textarea id="modal-descripcion"></textarea>
+        <input type="number" id="modal-inv">
+        <input type="number" id="modal-factor">
+        <input type="number" id="modal-cajas">
+        <input type="number" id="modal-unidades">
+        <input type="number" id="modal-total">
+        <input type="number" id="modal-diferencia">
+        <textarea id="modal-justificacion"></textarea>
+        <div class="modal-buttons">
             <button onclick="aceptarEdicion()">Aceptar</button>
             <button onclick="cancelarEdicion()">Cancelar</button>
         </div>
     </div>
 
     <script>
-        document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
+        const meses = [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        ];
+        const hoy = new Date();
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        const año = hoy.getFullYear();
+        document.getElementById("current-date").textContent = `Hoy es ${dia}/${mes}/${año}`;
 
         function limitDigits(input, maxDigits) {
             if (input.value.length > maxDigits) {
@@ -229,48 +280,51 @@
             alert("Datos guardados (simulado).");
         }
 
-        function buscarDescripcion() {
-            const codigo = document.getElementById('codigo').value;
-            fetch('bdd_bodega.json')
-                .then(response => response.json())
-                .then(data => {
-                    const item = data.find(d => d.codigo === codigo);
-                    document.getElementById('descripcion').value = item ? item.descripcion : "No encontrado";
-                });
+        async function buscarDescripcion() {
+            const codigo = document.getElementById("codigo").value;
+            try {
+                const response = await fetch("bdd_bodega.json");
+                const data = await response.json();
+                document.getElementById("descripcion").value = data[codigo] || "Descripción no encontrada";
+            } catch (error) {
+                document.getElementById("descripcion").value = "Error al cargar la descripción";
+            }
         }
 
-        let currentRow = null;
-
-        function editarFila(button) {
-            currentRow = button.closest('tr');
-            const cells = currentRow.querySelectorAll('td');
-            document.getElementById('editProveedor').value = cells[0].textContent;
-            document.getElementById('editCodigo').value = cells[1].textContent;
-            document.getElementById('editDescripcion').value = cells[2].textContent;
-            document.getElementById('editReporte').value = cells[3].textContent;
-            document.getElementById('editFactor').value = cells[4].textContent;
-            document.getElementById('editCajas').value = cells[5].textContent;
-            document.getElementById('editUnidades').value = cells[6].textContent;
-            document.getElementById('editTotal').value = cells[7].textContent;
-            document.getElementById('editDiferencia').value = cells[8].textContent;
-            document.getElementById('editJustificacion').value = cells[9].textContent;
-            document.getElementById('editModal').style.display = 'block';
+        let filaActual = null;
+        function editarFila(btn) {
+            filaActual = btn.closest("tr");
+            const celdas = filaActual.querySelectorAll("td");
+            document.getElementById("modal-proveedor").value = celdas[0].textContent;
+            document.getElementById("modal-codigo").value = celdas[1].textContent;
+            document.getElementById("modal-descripcion").value = celdas[2].textContent;
+            document.getElementById("modal-inv").value = celdas[3].textContent;
+            document.getElementById("modal-factor").value = celdas[4].textContent;
+            document.getElementById("modal-cajas").value = celdas[5].textContent;
+            document.getElementById("modal-unidades").value = celdas[6].textContent;
+            document.getElementById("modal-total").value = celdas[7].textContent;
+            document.getElementById("modal-diferencia").value = celdas[8].textContent;
+            document.getElementById("modal-justificacion").value = celdas[9].textContent;
+            document.getElementById("modal-edicion").style.display = "block";
         }
 
         function aceptarEdicion() {
-            const inputs = [
-                'editProveedor', 'editCodigo', 'editDescripcion', 'editReporte',
-                'editFactor', 'editCajas', 'editUnidades', 'editTotal',
-                'editDiferencia', 'editJustificacion'
-            ];
-            inputs.forEach((id, index) => {
-                currentRow.cells[index].textContent = document.getElementById(id).value;
-            });
-            document.getElementById('editModal').style.display = 'none';
+            const celdas = filaActual.querySelectorAll("td");
+            celdas[0].textContent = document.getElementById("modal-proveedor").value;
+            celdas[1].textContent = document.getElementById("modal-codigo").value;
+            celdas[2].textContent = document.getElementById("modal-descripcion").value;
+            celdas[3].textContent = document.getElementById("modal-inv").value;
+            celdas[4].textContent = document.getElementById("modal-factor").value;
+            celdas[5].textContent = document.getElementById("modal-cajas").value;
+            celdas[6].textContent = document.getElementById("modal-unidades").value;
+            celdas[7].textContent = document.getElementById("modal-total").value;
+            celdas[8].textContent = document.getElementById("modal-diferencia").value;
+            celdas[9].textContent = document.getElementById("modal-justificacion").value;
+            document.getElementById("modal-edicion").style.display = "none";
         }
 
         function cancelarEdicion() {
-            document.getElementById('editModal').style.display = 'none';
+            document.getElementById("modal-edicion").style.display = "none";
         }
     </script>
 

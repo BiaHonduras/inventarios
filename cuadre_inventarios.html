@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 10px;
             background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
             background-size: cover;
             background-attachment: fixed;
@@ -33,22 +33,19 @@
         }
         .form-section {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             margin: 20px 0;
         }
-        .form-group {
-            margin: 10px;
-        }
-        .form-group label {
-            background-color: #d3d3d3;
-            display: inline-block;
-            padding: 2px 6px;
-        }
-        .form-group input[type="number"],
-        .form-group input[type="text"] {
-            width: 150px;
+        .form-section input[type="number"], .form-section input[type="text"] {
             padding: 5px;
+            margin: 5px;
+        }
+        .label {
+            background-color: #d3d3d3;
+            padding: 3px 8px;
+            display: inline-block;
+            margin-top: 10px;
         }
         .image-preview {
             text-align: center;
@@ -57,20 +54,27 @@
         .image-preview img {
             max-width: 150px;
         }
+        .description-box {
+            text-align: center;
+            margin-top: 10px;
+        }
+        #descripcion {
+            width: 80%;
+            height: 60px;
+            text-align: center;
+        }
         .total {
             text-align: center;
             margin-top: 10px;
             font-weight: bold;
-        }
-        .total span.label {
             background-color: #d3d3d3;
-            padding: 2px 6px;
+            padding: 5px;
         }
-        .save-button {
+        .save-button, .finalize-button {
             text-align: center;
-            margin: 20px 0;
+            margin: 10px;
         }
-        .save-button button {
+        .save-button button, .finalize-button button {
             padding: 10px 20px;
             font-size: 16px;
         }
@@ -78,32 +82,40 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 30px;
+            background-color: white;
         }
         table, th, td {
             border: 1px solid #999;
+        }
+        th {
+            background-color: #f2f2f2;
         }
         th, td {
             padding: 8px;
             text-align: center;
         }
-        th {
-            background-color: #f2f2f2;
+        .action-buttons button {
+            padding: 5px;
+            margin: 2px;
         }
         .footer {
-            width: 100%;
-            margin-top: 40px;
-        }
-        .user-display {
-            text-align: right;
-            font-weight: bold;
-            padding-right: 10px;
-        }
-        .creator-legend {
-            background-color: #d3d3d3;
             text-align: center;
+            background-color: #d3d3d3;
             padding: 10px;
+            margin-top: 20px;
+        }
+        .user-info {
+            text-align: right;
             margin-top: 10px;
-            font-size: 14px;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .form-section {
+                width: 100%;
+            }
+            #descripcion {
+                width: 95%;
+            }
         }
     </style>
 </head>
@@ -117,37 +129,39 @@
     <div class="date" id="current-date"></div>
 
     <div class="form-section">
-        <div class="form-group">
-            <label>Código del artículo:</label><br>
-            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
-            <button onclick="buscarDescripcion()">Buscar</button>
-        </div>
+        <div class="label">Código del Artículo</div>
+        <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
+        <button onclick="buscarDescripcion()">Buscar</button>
+
         <div class="image-preview">
             <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
         </div>
-        <div class="form-group">
-            <label>Cajas / Fardos:</label><br>
-            <input type="number" id="cajas" oninput="calcularTotal()">
-        </div>
-        <div class="form-group">
-            <label>Unidades:</label><br>
-            <input type="number" id="unidades" oninput="calcularTotal()">
-        </div>
-        <div class="form-group" style="width: 100%;">
-            <label>Descripción del Artículo:</label><br>
-            <input type="text" id="descripcion" readonly style="width: 80%;">
-        </div>
-    </div>
 
-    <div class="total">
-        <span class="label">Total de Unidades:</span> <span id="total-unidades">0</span>
+        <div class="label">Cajas / Fardos</div>
+        <input type="number" id="cajas" oninput="calcularTotal()">
+
+        <div class="label">Unidades</div>
+        <input type="number" id="unidades" oninput="calcularTotal()">
+
+        <div class="label">Descripción del Artículo</div>
+        <div class="description-box">
+            <textarea id="descripcion" readonly></textarea>
+        </div>
+
+        <div class="total">
+            Total de Unidades: <span id="total-unidades">0</span>
+        </div>
     </div>
 
     <div class="save-button">
         <button onclick="guardar()">Guardar</button>
     </div>
 
-    <table>
+    <div class="finalize-button">
+        <button onclick="finalizar()">Finalizar</button>
+    </div>
+
+    <table id="tabla-registros">
         <thead>
             <tr>
                 <th>Proveedor</th>
@@ -160,30 +174,31 @@
                 <th>Total Unidades</th>
                 <th>Diferencia</th>
                 <th>Justificación</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Proveedor A</td>
                 <td>1234567</td>
-                <td>Ejemplo de artículo con descripción larga para prueba de diseño responsivo</td>
+                <td>Ejemplo de artículo con descripción larga para prueba de diseño</td>
                 <td>100</td>
                 <td>12</td>
                 <td>5</td>
                 <td>3</td>
                 <td>63</td>
                 <td>-37</td>
-                <td>
-                    <button style="background-color: green; color: white; font-size: 10px;" onclick="editarFila(this)">✔</button>
-                    <button style="background-color: red; color: white; font-size: 10px;">✖</button>
+                <td>Revisión pendiente</td>
+                <td class="action-buttons">
+                    <button style="background-color: green;" onclick="editarFila(this)">✎</button>
+                    <button style="background-color: red;" onclick="eliminarFila(this)">🗑</button>
                 </td>
             </tr>
         </tbody>
     </table>
 
-    <div class="footer">
-        <div class="creator-legend">Creado por Hernán Manuel Pérez Banegas - Verificador de Inventarios SPS - Bia Honduras</div>
-    </div>
+    <div class="user-info">Usuario: demo_user</div>
+    <div class="footer">Creado por Hernán Manuel Pérez Banegas - Verificador de Inventarios SPS - Bia Honduras</div>
 
     <script>
         const meses = [
@@ -210,22 +225,75 @@
             document.getElementById('total-unidades').textContent = total;
         }
 
-        function buscarDescripcion() {
+        async function buscarDescripcion() {
             const codigo = document.getElementById('codigo').value;
-            fetch('bdd_bodega.json')
-                .then(response => response.json())
-                .then(data => {
-                    const item = data.find(entry => entry.codigo === codigo);
-                    document.getElementById('descripcion').value = item ? item.descripcion : 'No encontrado';
-                });
+            try {
+                const response = await fetch('bdd_bodega.json');
+                const data = await response.json();
+                if (data[codigo]) {
+                    document.getElementById('descripcion').value = data[codigo];
+                } else {
+                    document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
+                }
+            } catch (error) {
+                document.getElementById('descripcion').value = "Error al cargar la base de datos";
+            }
         }
 
         function guardar() {
-            alert("Datos guardados (simulado).");
+            alert("Registro guardado (simulado).");
         }
 
-        function editarFila(button) {
-            alert("Ventana emergente para editar (simulado).");
+        function finalizar() {
+            alert("Todos los registros han sido guardados con la fecha actual. Se inicia un nuevo registro.");
+        }
+
+        function editarFila(btn) {
+            const fila = btn.closest('tr');
+            const valores = Array.from(fila.children).slice(0, -1).map(td => td.textContent);
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.backgroundColor = '#fff';
+            modal.style.padding = '20px';
+            modal.style.border = '1px solid #999';
+            modal.style.zIndex = '1000';
+            modal.style.width = '300px';
+
+            const inputs = valores.map((val, i) => {
+                const input = document.createElement('input');
+                input.value = val;
+                input.style.display = 'block';
+                input.style.marginBottom = '5px';
+                return input;
+            });
+
+            const aceptar = document.createElement('button');
+            aceptar.textContent = 'Aceptar';
+            aceptar.onclick = () => {
+                inputs.forEach((input, i) => {
+                    fila.children[i].textContent = input.value;
+                });
+                document.body.removeChild(modal);
+            };
+
+            const cancelar = document.createElement('button');
+            cancelar.textContent = 'Cancelar';
+            cancelar.onclick = () => {
+                document.body.removeChild(modal);
+            };
+
+            inputs.forEach(input => modal.appendChild(input));
+            modal.appendChild(aceptar);
+            modal.appendChild(cancelar);
+            document.body.appendChild(modal);
+        }
+
+        function eliminarFila(btn) {
+            const fila = btn.closest('tr');
+            fila.remove();
         }
     </script>
 

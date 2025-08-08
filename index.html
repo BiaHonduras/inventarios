@@ -61,8 +61,9 @@
     <h2 style="text-align: center;"> Cuadre de Inventario Diario </h2>
     <p style="text-align: center;"> Ingrese su Usuario y Contraseña para acceder </p>
     <select id="usuario">
-        <option value="vendedor">Vendedores</option>
-        <option value="bodega">Bodega</option>
+        <option value="hperez">Hernán Pérez</option>
+        <option value="malopez">Manuel López</option>
+        <option value="mpacheco">Mario Pacheco</option>
     </select>
     <input type="password" id="password" placeholder="Contraseña">
     <button onclick="login()">Ingresar</button>
@@ -78,10 +79,12 @@
     function login() {
         const user = document.getElementById("usuario").value;
         const pass = document.getElementById("password").value;
-        if (user === "vendedor" && pass === "Ventas123") {
-            window.location.href = "vendedores.html";
-        } else if (user === "bodega" && pass === "Logistica123") {
-            window.location.href = "bodega.html";
+        if (user === "hperez" && pass === "hernan123") {
+            window.location.href = "inventarios.html";
+        } else if (user === "malopez" && pass === "manuel123") {
+            window.location.href = "inventarios.html";
+        } else if (user === "mpacheco" && pass === "manrio123") {
+            window.location.href = "inventarios.html";
         } else {
             document.getElementById("loginError").textContent = "Usuario o contraseña incorrecta.";
         }

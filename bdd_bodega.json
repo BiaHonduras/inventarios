@@ -1,0 +1,22 @@
+[
+    {
+        "codigo": "1000012",
+        "descripcion": "Caja de papel higiénico"
+    },
+    {
+        "codigo": "1000456",
+        "descripcion": "Fardo de arroz 25kg"
+    },
+    {
+        "codigo": "1000789",
+        "descripcion": "Botella de aceite vegetal 1L"
+    },
+    {
+        "codigo": "1001234",
+        "descripcion": "Paquete de servilletas"
+    },
+    {
+        "codigo": "1005678",
+        "descripcion": "Lata de frijoles negros"
+    }
+]

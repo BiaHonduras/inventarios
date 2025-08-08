@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,6 +8,9 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
         }
         .header-img {
             text-align: center;
@@ -28,7 +32,7 @@
         }
         .form-section {
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
             align-items: center;
             margin: 20px 0;
         }
@@ -38,27 +42,47 @@
         }
         .image-preview {
             text-align: center;
+            margin: 10px 0;
         }
         .image-preview img {
             max-width: 150px;
+        }
+        .inputs-left {
+            text-align: left;
+            margin-top: 10px;
+        }
+        .description-section {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .description-section label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .description-section input {
+            width: 300px;
+            padding: 5px;
         }
         .total {
             text-align: center;
             margin-top: 10px;
             font-weight: bold;
         }
-        .save-button {
+        .buttons {
             text-align: center;
             margin: 20px 0;
         }
-        .save-button button {
+        .buttons button {
             padding: 10px 20px;
             font-size: 16px;
+            margin: 0 10px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 30px;
+            background-color: white;
         }
         table, th, td {
             border: 1px solid #999;
@@ -84,17 +108,20 @@
     <div class="form-section">
         <div>
             <label>Código del artículo:</label><br>
-            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
+            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7); actualizarDescripcion();">
         </div>
         <div class="image-preview">
-            <img src="https://raw.githubusercontent.com/BiaHonduras/inventarios/main/Chocale.png" alt="Vista Previa">
+            <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
         </div>
-        <div>
+        <div class="inputs-left">
             <label>Cajas / Fardos:</label><br>
-            <input type="number" id="cajas" oninput="calcularTotal()">
-            <br><br>
+            <input type="number" id="cajas" oninput="calcularTotal()"><br><br>
             <label>Unidades:</label><br>
             <input type="number" id="unidades" oninput="calcularTotal()">
+        </div>
+        <div class="description-section">
+            <label>Descripción del Artículo:</label>
+            <input type="text" id="descripcion" readonly>
         </div>
     </div>
 
@@ -102,8 +129,9 @@
         Total de Unidades: <span id="total-unidades">0</span>
     </div>
 
-    <div class="save-button">
+    <div class="buttons">
         <button onclick="guardar()">Guardar</button>
+        <button onclick="salir()">Salir</button>
     </div>
 
     <table>
@@ -144,6 +172,22 @@
 
         function guardar() {
             alert("Datos guardados (simulado).");
+        }
+
+        function salir() {
+            window.location.href = "index.html";
+        }
+
+        async function actualizarDescripcion() {
+            const codigo = document.getElementById('codigo').value;
+            try {
+                const response = await fetch('bodega.json');
+                const data = await response.json();
+                const item = data.find(d => d.codigo === codigo);
+                document.getElementById('descripcion').value = item ? item.descripcion : '';
+            } catch (error) {
+                console.error("Error al cargar bodega.json:", error);
+            }
         }
     </script>
 

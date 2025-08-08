@@ -8,10 +8,11 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 10px;
             background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
             background-size: cover;
             background-attachment: fixed;
+            margin: 0;
+            padding: 20px;
         }
         .header-img {
             text-align: center;
@@ -25,6 +26,7 @@
             text-align: center;
             font-size: 20px;
             font-weight: bold;
+            margin-top: 10px;
         }
         .date {
             text-align: center;
@@ -37,30 +39,34 @@
             align-items: center;
             margin: 20px 0;
         }
-        .form-section input[type="number"], .form-section input[type="text"] {
-            padding: 5px;
-            margin: 5px;
-        }
-        .label {
-            background-color: #d3d3d3;
-            padding: 3px 8px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        .image-preview {
+        .form-group {
+            margin: 10px 0;
             text-align: center;
-            margin: 10px;
+        }
+        .form-group label {
+            background-color: #d3d3d3;
+            padding: 3px 6px;
+            font-weight: bold;
+        }
+        .form-group input[type="number"],
+        .form-group input[type="text"] {
+            padding: 5px;
+            width: 150px;
         }
         .image-preview img {
             max-width: 150px;
+            margin: 10px 0;
         }
-        .description-box {
-            text-align: center;
-            margin-top: 10px;
-        }
-        #descripcion {
+        .descripcion-box {
             width: 80%;
             height: 60px;
+            margin: 10px auto;
+            text-align: center;
+        }
+        .descripcion-box textarea {
+            width: 100%;
+            height: 100%;
+            resize: none;
             text-align: center;
         }
         .total {
@@ -68,13 +74,14 @@
             margin-top: 10px;
             font-weight: bold;
             background-color: #d3d3d3;
-            padding: 5px;
+            display: inline-block;
+            padding: 5px 10px;
         }
-        .save-button, .finalize-button {
+        .save-button {
             text-align: center;
-            margin: 10px;
+            margin: 20px 0;
         }
-        .save-button button, .finalize-button button {
+        .save-button button {
             padding: 10px 20px;
             font-size: 16px;
         }
@@ -94,28 +101,11 @@
             padding: 8px;
             text-align: center;
         }
-        .action-buttons button {
-            padding: 5px;
-            margin: 2px;
-        }
         .footer {
             text-align: center;
             background-color: #d3d3d3;
             padding: 10px;
-            margin-top: 20px;
-        }
-        .user-info {
-            text-align: right;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        @media (max-width: 768px) {
-            .form-section {
-                width: 100%;
-            }
-            #descripcion {
-                width: 95%;
-            }
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -129,25 +119,28 @@
     <div class="date" id="current-date"></div>
 
     <div class="form-section">
-        <div class="label">Código del Artículo</div>
-        <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
-        <button onclick="buscarDescripcion()">Buscar</button>
-
+        <div class="form-group">
+            <label for="codigo">Código del Artículo</label><br>
+            <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
+            <button onclick="buscarDescripcion()">Buscar</button>
+        </div>
         <div class="image-preview">
             <img src="https://via.placeholder.com/150" alt="Imagen del artículo">
         </div>
-
-        <div class="label">Cajas / Fardos</div>
-        <input type="number" id="cajas" oninput="calcularTotal()">
-
-        <div class="label">Unidades</div>
-        <input type="number" id="unidades" oninput="calcularTotal()">
-
-        <div class="label">Descripción del Artículo</div>
-        <div class="description-box">
-            <textarea id="descripcion" readonly></textarea>
+        <div class="form-group">
+            <label for="cajas">Cajas / Fardos</label><br>
+            <input type="number" id="cajas" oninput="calcularTotal()">
         </div>
-
+        <div class="form-group">
+            <label for="unidades">Unidades</label><br>
+            <input type="number" id="unidades" oninput="calcularTotal()">
+        </div>
+        <div class="form-group">
+            <label for="descripcion">Descripción del Artículo</label><br>
+            <div class="descripcion-box">
+                <textarea id="descripcion" readonly></textarea>
+            </div>
+        </div>
         <div class="total">
             Total de Unidades: <span id="total-unidades">0</span>
         </div>
@@ -157,11 +150,7 @@
         <button onclick="guardar()">Guardar</button>
     </div>
 
-    <div class="finalize-button">
-        <button onclick="finalizar()">Finalizar</button>
-    </div>
-
-    <table id="tabla-registros">
+    <table>
         <thead>
             <tr>
                 <th>Proveedor</th>
@@ -174,31 +163,27 @@
                 <th>Total Unidades</th>
                 <th>Diferencia</th>
                 <th>Justificación</th>
-                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Proveedor A</td>
-                <td>1234567</td>
-                <td>Ejemplo de artículo con descripción larga para prueba de diseño</td>
+                <td>100001</td>
+                <td>Arroz blanco 20 lb - Proveedor A</td>
                 <td>100</td>
                 <td>12</td>
                 <td>5</td>
                 <td>3</td>
                 <td>63</td>
                 <td>-37</td>
-                <td>Revisión pendiente</td>
-                <td class="action-buttons">
-                    <button style="background-color: green;" onclick="editarFila(this)">✎</button>
-                    <button style="background-color: red;" onclick="eliminarFila(this)">🗑</button>
-                </td>
+                <td>Inventario incompleto</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="user-info">Usuario: demo_user</div>
-    <div class="footer">Creado por Hernán Manuel Pérez Banegas - Verificador de Inventarios SPS - Bia Honduras</div>
+    <div class="footer">
+        Creado por Hernán Manuel Pérez Banegas - Verificador de Inventarios SPS - Bia Honduras
+    </div>
 
     <script>
         const meses = [
@@ -241,59 +226,7 @@
         }
 
         function guardar() {
-            alert("Registro guardado (simulado).");
-        }
-
-        function finalizar() {
-            alert("Todos los registros han sido guardados con la fecha actual. Se inicia un nuevo registro.");
-        }
-
-        function editarFila(btn) {
-            const fila = btn.closest('tr');
-            const valores = Array.from(fila.children).slice(0, -1).map(td => td.textContent);
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '50%';
-            modal.style.left = '50%';
-            modal.style.transform = 'translate(-50%, -50%)';
-            modal.style.backgroundColor = '#fff';
-            modal.style.padding = '20px';
-            modal.style.border = '1px solid #999';
-            modal.style.zIndex = '1000';
-            modal.style.width = '300px';
-
-            const inputs = valores.map((val, i) => {
-                const input = document.createElement('input');
-                input.value = val;
-                input.style.display = 'block';
-                input.style.marginBottom = '5px';
-                return input;
-            });
-
-            const aceptar = document.createElement('button');
-            aceptar.textContent = 'Aceptar';
-            aceptar.onclick = () => {
-                inputs.forEach((input, i) => {
-                    fila.children[i].textContent = input.value;
-                });
-                document.body.removeChild(modal);
-            };
-
-            const cancelar = document.createElement('button');
-            cancelar.textContent = 'Cancelar';
-            cancelar.onclick = () => {
-                document.body.removeChild(modal);
-            };
-
-            inputs.forEach(input => modal.appendChild(input));
-            modal.appendChild(aceptar);
-            modal.appendChild(cancelar);
-            document.body.appendChild(modal);
-        }
-
-        function eliminarFila(btn) {
-            const fila = btn.closest('tr');
-            fila.remove();
+            alert("Datos guardados (simulado).");
         }
     </script>
 

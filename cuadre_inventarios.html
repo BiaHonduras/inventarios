@@ -4,15 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Cuadre de Inventarios Diario</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
             background-image: url('https://raw.githubusercontent.com/BiaHonduras/home/main/background.jpg');
             background-size: cover;
-            background-attachment: fixed;
-            margin: 0;
-            padding: 20px;
+            margin: 20px;
         }
         .header-img {
             text-align: center;
@@ -26,7 +23,6 @@
             text-align: center;
             font-size: 20px;
             font-weight: bold;
-            margin-top: 10px;
         }
         .date {
             text-align: center;
@@ -39,34 +35,34 @@
             align-items: center;
             margin: 20px 0;
         }
-        .form-group {
-            margin: 10px 0;
-            text-align: center;
+        .form-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
         }
-        .form-group label {
+        .form-row label {
             background-color: #d3d3d3;
-            padding: 3px 6px;
+            padding: 5px;
             font-weight: bold;
         }
-        .form-group input[type="number"],
-        .form-group input[type="text"] {
+        .form-row input[type="number"],
+        .form-row input[type="text"] {
             padding: 5px;
-            width: 150px;
         }
-        .image-preview img {
-            max-width: 150px;
-            margin: 10px 0;
-        }
-        .descripcion-box {
-            width: 80%;
-            height: 60px;
-            margin: 10px auto;
+        .description-section {
             text-align: center;
+            margin-top: 10px;
         }
-        .descripcion-box textarea {
-            width: 100%;
-            height: 100%;
-            resize: none;
+        .description-section label {
+            background-color: #d3d3d3;
+            padding: 5px;
+            font-weight: bold;
+        }
+        .description-box {
+            width: 400px;
+            height: 40px;
+            margin-top: 5px;
             text-align: center;
         }
         .total {
@@ -74,16 +70,16 @@
             margin-top: 10px;
             font-weight: bold;
             background-color: #d3d3d3;
-            display: inline-block;
-            padding: 5px 10px;
+            padding: 5px;
         }
-        .save-button {
+        .buttons {
             text-align: center;
             margin: 20px 0;
         }
-        .save-button button {
+        .buttons button {
             padding: 10px 20px;
             font-size: 16px;
+            margin: 0 10px;
         }
         table {
             width: 100%;
@@ -105,7 +101,21 @@
             text-align: center;
             background-color: #d3d3d3;
             padding: 10px;
-            margin-top: 30px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .action-buttons button {
+            width: 20px;
+            height: 20px;
+            margin: 2px;
+            border: none;
+            cursor: pointer;
+        }
+        .edit-btn {
+            background-color: green;
+        }
+        .delete-btn {
+            background-color: red;
         }
     </style>
 </head>
@@ -119,35 +129,31 @@
     <div class="date" id="current-date"></div>
 
     <div class="form-section">
-        <div class="form-group">
-            <label for="codigo">Código del Artículo</label><br>
+        <div class="form-row">
+            <label for="codigo">Código del artículo:</label>
             <input type="number" id="codigo" maxlength="7" oninput="limitDigits(this, 7)">
             <button onclick="buscarDescripcion()">Buscar</button>
         </div>
-        <div class="image-preview">
-            <img src="https://raw.githubusercontent.com/BiaHonduras/home/inventarios/Chocale.png" alt="Imagen del artículo">
-        </div>
-        <div class="form-group">
-            <label for="cajas">Cajas / Fardos</label><br>
+        <div class="form-row">
+            <label for="cajas">Cajas / Fardos:</label>
             <input type="number" id="cajas" oninput="calcularTotal()">
-        </div>
-        <div class="form-group">
-            <label for="unidades">Unidades</label><br>
+            <label for="unidades">Unidades:</label>
             <input type="number" id="unidades" oninput="calcularTotal()">
         </div>
-        <div class="form-group">
-            <label for="descripcion">Descripción del Artículo</label><br>
-            <div class="descripcion-box">
-                <textarea id="descripcion" readonly></textarea>
-            </div>
-        </div>
-        <div class="total">
-            Total de Unidades: <span id="total-unidades">0</span>
+        <div class="description-section">
+            <label for="descripcion">Descripción del Artículo:</label><br>
+            <input type="text" id="descripcion" class="description-box" readonly>
         </div>
     </div>
 
-    <div class="save-button">
+    <div class="total">
+        Total de Unidades: <span id="total-unidades">0</span>
+    </div>
+
+    <div class="buttons">
         <button onclick="guardar()">Guardar</button>
+        <button onclick="salir()">Salir</button>
+        <button onclick="finalizar()">Finalizar</button>
     </div>
 
     <table>
@@ -165,18 +171,21 @@
                 <th>Justificación</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="tabla-body">
             <tr>
                 <td>Proveedor A</td>
-                <td>100001</td>
-                <td>Arroz blanco 20 lb - Proveedor A</td>
+                <td>1234567</td>
+                <td>Ejemplo de artículo</td>
                 <td>100</td>
                 <td>12</td>
                 <td>5</td>
                 <td>3</td>
                 <td>63</td>
                 <td>-37</td>
-                <td>Inventario incompleto</td>
+                <td class="action-buttons">
+                    <button class="edit-btn" onclick="editarFila(this)">✎</button>
+                    <button class="delete-btn" onclick="eliminarFila(this)">✖</button>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -186,15 +195,7 @@
     </div>
 
     <script>
-        const meses = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio",
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-        ];
-        const hoy = new Date();
-        const dia = String(hoy.getDate()).padStart(2, '0');
-        const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-        const año = hoy.getFullYear();
-        document.getElementById("current-date").textContent = `Hoy es ${dia}/${mes}/${año}`;
+        document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
 
         function limitDigits(input, maxDigits) {
             if (input.value.length > maxDigits) {
@@ -210,23 +211,59 @@
             document.getElementById('total-unidades').textContent = total;
         }
 
-        async function buscarDescripcion() {
+        function buscarDescripcion() {
             const codigo = document.getElementById('codigo').value;
-            try {
-                const response = await fetch('bdd_bodega.json');
-                const data = await response.json();
-                if (data[codigo]) {
-                    document.getElementById('descripcion').value = data[codigo];
-                } else {
-                    document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
-                }
-            } catch (error) {
-                document.getElementById('descripcion').value = "Error al cargar la base de datos";
-            }
+            fetch('bdd_bodega.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (data[codigo]) {
+                        document.getElementById('descripcion').value = data[codigo];
+                    } else {
+                        document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('descripcion').value = "Error al cargar la base de datos";
+                });
         }
 
         function guardar() {
-            alert("Datos guardados (simulado).");
+            alert("Registro guardado (simulado).");
+        }
+
+        function salir() {
+            window.location.href = "index.html";
+        }
+
+        function finalizar() {
+            alert("Registros finalizados y guardados (simulado).");
+        }
+
+        function editarFila(btn) {
+            const fila = btn.closest('tr');
+            const datos = Array.from(fila.children).map(td => td.textContent);
+            const ventana = window.open("", "Editar", "width=400,height=400");
+            ventana.document.write("<h3>Editar Registro</h3>");
+            datos.forEach((dato, i) => {
+                if (i < datos.length - 1) {
+                    ventana.document.write(`<label>Campo ${i+1}: </label><input type='text' value='${dato}'><br>`);
+                }
+            });
+            ventana.document.write("<button onclick='window.opener.actualizarFila(this.parentNode);window.close();'>Aceptar</button>");
+            ventana.document.write("<button onclick='window.close();'>Cancelar</button>");
+        }
+
+        function eliminarFila(btn) {
+            const fila = btn.closest('tr');
+            fila.remove();
+        }
+
+        function actualizarFila(form) {
+            const inputs = form.querySelectorAll('input');
+            const fila = document.querySelector('tr td button.edit-btn').closest('tr');
+            inputs.forEach((input, i) => {
+                fila.children[i].textContent = input.value;
+            });
         }
     </script>
 

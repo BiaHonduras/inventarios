@@ -379,6 +379,21 @@
         });
     }
 
+    function agregarFilaTabla(registro) {
+    const tabla = document.getElementById('tabla-registros').querySelector('tbody');
+    const fila = document.createElement('tr');
+
+    fila.innerHTML = `
+        <td>${registro.fecha}</td>
+        <td>${registro.codigo}</td>
+        <td>${registro.descripcion}</td>
+        <td>${registro.cajas}</td>
+        <td>${registro.unidades}</td>
+        <td>${registro.total_unidades}</td>
+    `;
+
+    tabla.appendChild(fila);
+}
     </script>
 
 </body>

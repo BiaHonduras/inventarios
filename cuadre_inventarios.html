@@ -250,12 +250,40 @@
 
     <script>
         document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
-
+        
         function limitDigits(input, maxDigits) {
             if (input.value.length > maxDigits) {
                 input.value = input.value.slice(0, maxDigits);
             }
         }
+
+        function finalizar() {
+        const fecha = new Date().toLocaleDateString('es-ES');
+        const codigo = document.getElementById('codigo').value;
+        const cajas = document.getElementById('cajas').value;
+        const unidades = document.getElementById('unidades').value;
+        const descripcion = document.getElementById('descripcion').value;
+        const total = document.getElementById('total-unidades').textContent;
+
+        const datos = {
+            fecha: fecha,
+            codigo: codigo,
+            descripcion: descripcion,
+            cajas: cajas,
+            unidades: unidades,
+            total_unidades: total
+        };
+
+        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cuadre_inventario_${fecha.replace(/\//g, '-')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        alert("Archivo JSON generado y descargado.");
+    }
 
         function calcularTotal() {
             const factor = 12;
@@ -290,7 +318,11 @@
         }
 
         function finalizar() {
-            alert("Registros finalizados y guardados (simulado).");
+            <div class="buttons">
+                <button onclick="guardar()">Guardar</button>
+                <button onclick="salir()">Salir</button>
+                <button onclick="finalizar()">Finalizar</button>
+            </div>
         }
 
         function editarFila(btn) {

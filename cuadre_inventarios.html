@@ -209,6 +209,23 @@
         <button onclick="salir()">Salir</button>
         <button onclick="finalizar()">Finalizar</button>
     </div>
+    
+    <div class="registro-table">
+    <h3 style="text-align:center;">Registros Guardados</h3>
+    <table id="tabla-registros">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Cajas</th>
+                <th>Unidades</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
     <table>
         <thead>
@@ -283,32 +300,34 @@
     }
 
     function guardar() {
-        const fecha = new Date().toLocaleDateString('es-ES');
-        const codigo = document.getElementById('codigo').value;
-        const cajas = document.getElementById('cajas').value;
-        const unidades = document.getElementById('unidades').value;
-        const descripcion = document.getElementById('descripcion').value;
-        const total = document.getElementById('total-unidades').textContent;
+    const fecha = new Date().toLocaleDateString('es-ES');
+    const codigo = document.getElementById('codigo').value;
+    const cajas = document.getElementById('cajas').value;
+    const unidades = document.getElementById('unidades').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const total = document.getElementById('total-unidades').textContent;
 
-        const registro = {
-            fecha: fecha,
-            codigo: codigo,
-            descripcion: descripcion,
-            cajas: cajas,
-            unidades: unidades,
-            total_unidades: total
-        };
+    const registro = {
+        fecha: fecha,
+        codigo: codigo,
+        descripcion: descripcion,
+        cajas: cajas,
+        unidades: unidades,
+        total_unidades: total
+    };
 
-        registros.push(registro);
-        alert("Registro guardado.");
-        
-        // Limpiar campos
-        document.getElementById('codigo').value = '';
-        document.getElementById('cajas').value = '';
-        document.getElementById('unidades').value = '';
-        document.getElementById('descripcion').value = '';
-        document.getElementById('total-unidades').textContent = '0';
-    }
+    registros.push(registro);
+    agregarFilaTabla(registro);
+
+    alert("Registro guardado.");
+
+    // Limpiar campos
+    document.getElementById('codigo').value = '';
+    document.getElementById('cajas').value = '';
+    document.getElementById('unidades').value = '';
+    document.getElementById('descripcion').value = '';
+    document.getElementById('total-unidades').textContent = '0';
+}
 
     function salir() {
         window.location.href = "index.html";

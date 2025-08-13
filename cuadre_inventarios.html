@@ -249,15 +249,40 @@
     </div>
 
     <script>
-        document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
-        
-        function limitDigits(input, maxDigits) {
-            if (input.value.length > maxDigits) {
-                input.value = input.value.slice(0, maxDigits);
-            }
-        }
+    const registros = [];
+    document.getElementById('current-date').textContent = "Hoy es " + new Date().toLocaleDateString('es-ES');
 
-        function finalizar() {
+    function limitDigits(input, maxDigits) {
+        if (input.value.length > maxDigits) {
+            input.value = input.value.slice(0, maxDigits);
+        }
+    }
+
+    function calcularTotal() {
+        const factor = 12;
+        const cajas = parseInt(document.getElementById('cajas').value) || 0;
+        const unidades = parseInt(document.getElementById('unidades').value) || 0;
+        const total = (cajas * factor) + unidades;
+        document.getElementById('total-unidades').textContent = total;
+    }
+
+    function buscarDescripcion() {
+        const codigo = document.getElementById('codigo').value;
+        fetch('bdd_bodega.json')
+            .then(response => response.json())
+            .then(data => {
+                if (data[codigo]) {
+                    document.getElementById('descripcion').value = data[codigo];
+                } else {
+                    document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
+                }
+            })
+            .catch(() => {
+                document.getElementById('descripcion').value = "Error al cargar la base de datos";
+            });
+    }
+
+    function guardar() {
         const fecha = new Date().toLocaleDateString('es-ES');
         const codigo = document.getElementById('codigo').value;
         const cajas = document.getElementById('cajas').value;
@@ -265,7 +290,7 @@
         const descripcion = document.getElementById('descripcion').value;
         const total = document.getElementById('total-unidades').textContent;
 
-        const datos = {
+        const registro = {
             fecha: fecha,
             codigo: codigo,
             descripcion: descripcion,
@@ -274,7 +299,29 @@
             total_unidades: total
         };
 
-        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        registros.push(registro);
+        alert("Registro guardado.");
+        
+        // Limpiar campos
+        document.getElementById('codigo').value = '';
+        document.getElementById('cajas').value = '';
+        document.getElementById('unidades').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('total-unidades').textContent = '0';
+    }
+
+    function salir() {
+        window.location.href = "index.html";
+    }
+
+    function finalizar() {
+        if (registros.length === 0) {
+            alert("No hay registros para guardar.");
+            return;
+        }
+
+        const fecha = new Date().toLocaleDateString('es-ES');
+        const blob = new Blob([JSON.stringify(registros, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -285,72 +332,34 @@
         alert("Archivo JSON generado y descargado.");
     }
 
-        function calcularTotal() {
-            const factor = 12;
-            const cajas = parseInt(document.getElementById('cajas').value) || 0;
-            const unidades = parseInt(document.getElementById('unidades').value) || 0;
-            const total = (cajas * factor) + unidades;
-            document.getElementById('total-unidades').textContent = total;
-        }
+    // Funciones de edición y eliminación de filas (sin cambios)
+    function editarFila(btn) {
+        const fila = btn.closest('tr');
+        const datos = Array.from(fila.children).map(td => td.textContent);
+        const ventana = window.open("", "Editar", "width=400,height=400");
+        ventana.document.write("<h3>Editar Registro</h3>");
+        datos.forEach((dato, i) => {
+            if (i < datos.length - 1) {
+                ventana.document.write(`<label>Campo ${i+1}: </label><input type='text' value='${dato}'><br>`);
+            }
+        });
+        ventana.document.write("<button onclick='window.opener.actualizarFila(this.parentNode);window.close();'>Aceptar</button>");
+        ventana.document.write("<button onclick='window.close();'>Cancelar</button>");
+    }
 
-        function buscarDescripcion() {
-            const codigo = document.getElementById('codigo').value;
-            fetch('bdd_bodega.json')
-                .then(response => response.json())
-                .then(data => {
-                    if (data[codigo]) {
-                        document.getElementById('descripcion').value = data[codigo];
-                    } else {
-                        document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('descripcion').value = "Error al cargar la base de datos";
-                });
-        }
+    function eliminarFila(btn) {
+        const fila = btn.closest('tr');
+        fila.remove();
+    }
 
-        function guardar() {
-            alert("Registro guardado (simulado).");
-        }
+    function actualizarFila(form) {
+        const inputs = form.querySelectorAll('input');
+        const fila = document.querySelector('tr td button.edit-btn').closest('tr');
+        inputs.forEach((input, i) => {
+            fila.children[i].textContent = input.value;
+        });
+    }
 
-        function salir() {
-            window.location.href = "index.html";
-        }
-
-        function finalizar() {
-            <div class="buttons">
-                <button onclick="guardar()">Guardar</button>
-                <button onclick="salir()">Salir</button>
-                <button onclick="finalizar()">Finalizar</button>
-            </div>
-        }
-
-        function editarFila(btn) {
-            const fila = btn.closest('tr');
-            const datos = Array.from(fila.children).map(td => td.textContent);
-            const ventana = window.open("", "Editar", "width=400,height=400");
-            ventana.document.write("<h3>Editar Registro</h3>");
-            datos.forEach((dato, i) => {
-                if (i < datos.length - 1) {
-                    ventana.document.write(`<label>Campo ${i+1}: </label><input type='text' value='${dato}'><br>`);
-                }
-            });
-            ventana.document.write("<button onclick='window.opener.actualizarFila(this.parentNode);window.close();'>Aceptar</button>");
-            ventana.document.write("<button onclick='window.close();'>Cancelar</button>");
-        }
-
-        function eliminarFila(btn) {
-            const fila = btn.closest('tr');
-            fila.remove();
-        }
-
-        function actualizarFila(form) {
-            const inputs = form.querySelectorAll('input');
-            const fila = document.querySelector('tr td button.edit-btn').closest('tr');
-            inputs.forEach((input, i) => {
-                fila.children[i].textContent = input.value;
-            });
-        }
     </script>
 
 </body>

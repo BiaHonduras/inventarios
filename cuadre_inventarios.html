@@ -224,6 +224,10 @@
         <button onclick="guardar()">Guardar</button>
         <button onclick="salir()">Salir</button>
         <button onclick="finalizar()">Finalizar</button>
+
+        <input type="file" id="archivoReporteria" accept=".xlsx">
+        <button onclick="importarReporteria()">Importar Reportería</button>
+
     </div>
     
     <div class="registro-table">
@@ -385,6 +389,46 @@
 
         alert("Archivo CSV generado y descargado.");
     }
+
+        
+    https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js
+    let datosReporteria = {};
+
+    function importarReporteria() {
+        const archivo = document.getElementById("archivoReporteria").files[0];
+            if (!archivo) {
+            alert("Por favor selecciona un archivo Excel.");
+            return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = function(e) {
+        const datos = new Uint8Array(e.target.result);
+        const libro = XLSX.read(datos, { type: "array" });
+
+        // Asumimos que los datos están en la primera hoja
+        const hoja = libro.Sheets[libro.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+
+        // Construir diccionario por código de artículo
+        datosReporteria = {};
+        json.forEach(fila => {
+            const codArt = fila["Cod Art"];
+            const descripcion = fila["Cod Descrip"];
+            const cantidad = fila["Cantidad"];
+            if (codArt && cantidad !== "") {
+                datosReporteria[String(codArt).trim()] = {
+                    descripcion: descripcion,
+                    cantidad: parseFloat(cantidad)
+                };
+            }
+        });
+
+        alert("Archivo de Reportería importado correctamente.");
+        console.log("Datos de Reportería:", datosReporteria);
+    };
+    lector.readAsArrayBuffer(archivo);
+}
 
     // Funciones de edición y eliminación de filas (sin cambios)
     function editarFila(btn) {

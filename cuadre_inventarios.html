@@ -365,12 +365,15 @@
         csv.push(datos.join(","));
     });
 
-        const fecha = new Date().toLocaleDateString('es-ES');
+        
+        const fechaActual = new Date();
         const blob = new Blob([csv.join("\n")], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
+        const fechaFormateada = `${fechaActual.getDate().toString().padStart(2, '0')}${(fechaActual.getMonth()+1).toString().padStart(2, '0')}${fechaActual.getFullYear()}`;
+        
         a.href = url;
-        a.download = "Cuadre_inventario_${fecha.replace(/\//g, '-')}.csv";
+        a.download = `Cuadre_Inventario_${fechaFormateada}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 

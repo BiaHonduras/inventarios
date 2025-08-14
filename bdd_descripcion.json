@@ -1,184 +1,730 @@
-{
-"100020": "Café Maya 6 onz",
-"100031": "Café Maya Coffee Club Puro Molido 340g (12oz)",
-"100032": "Café Maya Coffee Club Puro Grano 340g (12oz)",
-"100080": "Café Maya Selecto 1x16",
-"100097": "Cafe Maya 1x15 390 g",
-"100098": "Cafe Maya 1x8 208 g",
-"100099": "Cafe Maya 1x14 364 g",
-"100100": "Café Maya Selecto 1x12 312 g",
-"100102": "Café Maya De Palo 340 g",
-"100104": "Café Maya Reserva 340g",
-"100124": "Café Maya 1x12 312 g",
-"120121": "Cafe Medalla 1x15 390 g",
-"120122": "Cafe Medalla 1x8 208 g",
-"120123": "Cafe Medalla 1x14 364 g",
-"120124": "Cafe Medalla 1x12 312 g",
-"130006": "Café Suli 1x16 432 g",
-"130013": "Café Suli 1x8 216g",
-"140013": "Crema para café Maya 1x24x50x4g",
-"140014": "Cremora en bote 1x12x170g",
-"150001": "Café Casinos 1x14 350 g",
-"170009": "Indio Espresso Roast 12 Onz",
-"170010": "Indio Espresso Roast 12 Onz(Gr",
-"170011": "Indio Tipo Arabe 12 Onz",
-"170012": "Indio Percolador 12 Onz",
-"170013": "Indio Medium Roast 12 Onz",
-"170014": "Indio Medium Roast 12 Onz(Gran",
-"170015": "Indio Tradicional 390 gr",
-"170016": "Indio 208 gr",
-"170024": "Oro 216 gr",
-"170025": "Oro 378 gr",
-"170028": "Oro 405 gr",
-"170029": "Oro Torrefacto Caja Export 432 g",
-"170030": "Indio Torrefacto Caja Export 432 g",
-"170038": "Indio Tradicional 364 g",
-"170040": "Oro 324 g",
-"170046": "Indio Tradicional 312 g",
-"170047": "Rey 1x14 350 g",
-"170048": "Corona 1x14 350 g",
-"170050": "Oro Soluble 170 g",
-"170059": "Delicia 1x14 350 g",
-"170060": "Combo Oro 378 g + Rey 350 g + Delicia 350 g",
-"170061": "Combo Oro 378 g + Medalla 364 g + Delicia 350 g",
-"170063": "Combo Oro 378 g + Maya 364 g + Corona 350 g",
-"170064": "Combos 5 Pack Oro 378 gr + 1  Oro 216 g",
-"310010": "Crismelos Gusanito 1 Caja x 12 Frascos x 160 Unidades",
-"310018": "CRISMELOS Gigante Bicolor 1C x 10 Bol x 30 Und x 24 g",
-"310023": "Crismelos Blanco 1 Caja x 20 Bolsas x 50 Unid x 300 g",
-"310024": "Crismelos Color 1 Caja x 20 Bolsas x 50 Unid x 300 g",
-"310025": "Crismelos Color 1 Caja x 20 Bolsas x 100 Unid x 300 g",
-"310038": "CRISMELOS Gigante Blanco 1C x 10 Bol x 30 Und x 24 g",
-"310043": "Malvavisco Tira Chocale 8x10x35 g",
-"310054": "Crismelos Color 18 x 150 g",
-"310067": "Malvavisco CRISMELOS Color 15x240 g",
-"310068": "Malvavisco CRISMELOS Blanco 15x240 g",
-"310069": "Malvavisco CRISMELOS blanco 18x150 g",
-"310074": "Malvaviscos Bolsón Zoo Bongy 24x50x5 g",
-"310076": "Malvaviscos MarshmellOsos 24x50x5 g",
-"310083": "Malvaviscos Tira Mini CRISMELOS 12x12x40 g",
-"310086": "Bandeja Ositos 12*540 g",
-"310087": "Bandeja Culebra Transp 12*540 g",
-"310089": "Bandeja Aros Sandia 12*540 g",
-"310090": "Bandeja Corazones 12*540 g",
-"310092": "CRISMELOS Gota 1x20x100 g",
-"310094": "Bombones Napolitano 15x225 g",
-"310097": "Tira Chocale Chocolate 8x10x35 g",
-"310099": "Tira Chocale Banana 8x10x35 g",
-"310100": "Tira Chocale Fresa 8x10x35 g",
-"330007": "Chicleton Venus SURTIDO 1 Caja x 12 Bolsas x 100 Unidades",
-"330008": "Chicleton Venus MENTA 1 Caja x 12 Bolsas x 100 Unidades",
-"330010": "Confite Venus MIEL 1 Caja X 12 Bolsas X 100 Unidades",
-"330011": "Chicleton Venus MORITA 1 Caja X 12 Bolsas X 100 Unidades",
-"330012": "Chicleton Venus CERECITA 1 Caja X 12 Bolsas X 100 Unidades",
-"330013": "Chicletón Venus MENTA CHOCOLATE 1 Caja X 12 Bolsas X 10 Unidades",
-"330016": "Chicleton Venus SANDIA 1 Caja X 12 Bolsas X 100 Unidades",
-"330017": "Paleta Venus Dulce Amor CEREZA 16x40",
-"330018": "Paleta Venus Dulce Amor SANDIA 16x40",
-"330019": "Paleta Venus SUAVE FRUTA 30 x 40",
-"330020": "Confite Venus Duro Fiesta GIGANTE 12 x 3 LB",
-"330021": "Confite Venus JUMBO 6 x 5 LB",
-"330029": "Bombón Venus Dolche SURTIDO 1F x 10 Bolsas x 48 Unidades",
-"330036": "Paleta Venus MAS AMOR CEREZA 1 Caja x 25 Bolsas x 25 Unidades",
-"330037": "Paleta Venus MAS AMOR SANDIA 1 Caja x 25 Bolsas x 25 Unidades",
-"330038": "Confite relleno de EUCALIPTO 1C x 12 Bolsas x 100 Unidades",
-"330041": "Confite RELLENO DE CAFE 1Caja x 12 Bolsas x 100 Unidades",
-"330046": "Candy Mix 4X10",
-"330047": "Confite COFFE TOFFE 12x100",
-"330049": "Chicleton Venus MANGO 1 Caja x 12 Bolsas x 100 Unidades",
-"330050": "Confite Candi Mix 15 lbs",
-"330051": "Paleta Pops Kiss 15x24",
-"330054": "Confite menta largo 12x100",
-"330056": "Bombón Big Twist Surtido 12x24",
-"330057": "Bombón Big Twist Surtido 10x48",
-"330062": "Confite Venus MENTA Cuadrada 50 bolsas x 40 Unidades",
-"330063": "Confite Venus VAQUITA 50 bolsas x 40 Unidades",
-"330066": "Paleta Lechita 15x24x14g",
-"330067": "Bombón Surtido 1x15x24 408g",
-"330068": "Bombón Twist Surtido 1x15x24 408g",
-"330069": "Bombon YOGURT 15x24x17g",
-"330070": "Bombon COCO 15x24x17g",
-"330071": "Bombon ICE CREAM 15x24x17g",
-"330072": "Bombon DULCE DE LECHE 15x24x17g",
-"330073": "Bombon ROJO BOOM 15x24x17g",
-"330074": "Bombon SANDÍA 15x24x17g",
-"330075": "Bombon MANGO 15x24x17g",
-"330076": "Bombon LYCHEE 15x24x17g",
-"330077": "Bombon KOOL 15x24x17g",
-"330078": "Chicle VENUS Gool Tutti Frutti 1x50x36",
-"330079": "Chicle VENUS Menta 1x50x36",
-"330080": "Confite Venus MENTA 50 bolsas x 40 Unidades 160g",
-"330081": "Confite Venus FIESTA 50 bolsas x 40 Unidades 160g",
-"330082": "Pop Kiss Mora Azul VENUS 15x24",
-"340010": "CHOCOLISTO Tarro 12x300g",
-"340011": "CHOCOLISTO Fresa 24x200g",
-"340013": "CHOCOLISTO 18x200g",
-"340016": "CHOCOLISTO ristra 25x12x14g",
-"340024": "CHOCOLISTO choco 12x360g",
-"340026": "Chocolisto Mashmellows 150gx18",
-"340027": "Bolitas de Chocolate Leche Arroz",
-"350017": "TOSH Granola Avena Pasas 16x300g",
-"350018": "TOSH Granola Semilla Chia 16x300g",
-"370003": "Galleta Best xl 40gr 24 bolsa 12 und",
-"370005": "Chapetin 24 paquetes de 12 unidades",
-"370012": "Chocogol caja de 12 botes de 150 und",
-"370015": "Conito 12 botes de 70 uni",
-"370029": "Choco Panda Syrup 1 caja 12 botes 14 oz",
-"370030": "Galleta Best Chocolate oscuro 24 paq 12 Unidades",
-"370032": "Chocopanda 36 cajitas 285 gr",
-"370033": "Chocopanda Doy pack 24 bolsas 200 gr",
-"370035": "Chocopanda bote 400 gr 24 unidades",
-"370037": "Galleta Best fresa 24 paquetes de 12 Unidades",
-"370040": "Galleta Best 20g 24 paq de 12 Unidades",
-"370044": "Galleta Manicotti 24 paq x 12 Unidades 34gr",
-"370048": "Manicotti 156g 24paq de 12 Unidades 13g",
-"370051": "Botoneta Mani Cobert Choco 240g 36Bolsas",
-"370052": "Botoneta Chocolate 240g 36Bolsas",
-"370053": "BEST Chocolate Relleno Doypack 212.5g 24Bolsas",
-"370055": "Chapetín XL 24paq x 12 x 40g",
-"370056": "Conito 90x10 7g",
-"370057": "Chocofruta Tableta 32x300g",
-"370058": "Chocogol 50x40 4g",
-"370059": "Chocofruta Chongo 1400g",
-"370064": "Chocofruta 350g 1x50",
-"370067": "Chocogol 4g 8 disp x 250 Unidades",
-"370068": "Botoneta maní doypack 85g 1 x 52 bolsas",
-"370069": "Botoneta chocolate doypack 85g 1 x 52 bolsas",
-"370070": "Chocofruta 700g 1 x 25",
-"370071": "BEST Piñata Mix 12x734gg",
-"370072": "Botoneta Chocolate 20x24x9g",
-"370073": "Botoneta Maní 20x24x9g",
-"370074": "Galleta Best vainilla 26g 24 paq x 12 Unidades",
-"370075": "Botonetas Gold 50g 12 display x 12 Unidades",
-"370076": "Pedritos 10g, 40 paquetes, 12 Unidades",
-"370077": "Tableta Best 16Dsx16Ux8G",
-"370079": "MANIN BOTONETA Y MANI 50x70G",
-"370083": "MANIN BOTONETA Y MANI 20Rx24x15G",
-"390013": "GRANUTS Party Mix 540g 8x12x45g",
-"390018": "GRANUTS Gragea arándanos 8x10x50g",
-"390019": "GRANUTS Gragea pasas 8x10x50g",
-"390020": "GRANUTS Gragea almendra 8x10x40g",
-"390047": "GRANUTS Arandamix 130 gramos 14x130g",
-"390048": "GRANUTS Fiestamix 130 gramos 14x130g",
-"390049": "GRANUTS Grillmix 130 gramos 14x130g",
-"390058": "Mezcla nueces GRANUTS 540G 8X12X45G",
-"390059": "Mezcla arándanos GRANUTS 540g 8x12x45g",
-"390060": "Mezcla nueces GRANUTS180g 12x180g",
-"390061": "GRANUTS Mezcla de arándanos 180g12x180g",
-"390063": "GRANUTS Party Mix 180g12x180g",
-"390066": "GRANUTS Surtido 520g 8x45g 4x40g",
-"390067": "GRANUTS Sweet & Salty 12x180g",
-"390069": "GRANUTS Gragea marañón 8x10x40g",
-"390070": "GRANUTS Barbacoa Mix 180g",
-"390071": "Mezcla Tajín GRANUTS 150g 12x150g",
-"390072": "Mezcla Tajín GRANUTS 540g 8x12x45g",
-"410003": "Chiles jalapeños en trocitos en salmuera",
-"410004": "Rodajas de chiles jalapeños para nachos",
-"420001": "Galleta CREMAS VAIVAI 24x12x22g",
-"420006": "Galletas CREME O! vainilla con relleno sabor chocolate",
-"420007": "Galletas CREME O! vainilla con relleno sabor fresa",
-"420008": "Galletas CREME O! vainilla con relleno sabor vainilla",
-"010165": "Indio Medium Roast 12 Onz (Grano)",
-"0101107": "Indio Tradicional 364 g",
-"010214": "Oro 378 gr"
-}
+[
+  {
+    "codigo": "100020",
+    "descripcion": "Café Maya 6 onz"
+  },
+  {
+    "codigo": "100031",
+    "descripcion": "Café Maya Coffee Club Puro Molido 340g (12oz)"
+  },
+  {
+    "codigo": "100032",
+    "descripcion": "Café Maya Coffee Club Puro Grano 340g (12oz)"
+  },
+  {
+    "codigo": "100080",
+    "descripcion": "Café Maya Selecto 1x16"
+  },
+  {
+    "codigo": "100097",
+    "descripcion": "Cafe Maya 1x15 390 g"
+  },
+  {
+    "codigo": "100098",
+    "descripcion": "Cafe Maya 1x8 208 g"
+  },
+  {
+    "codigo": "100099",
+    "descripcion": "Cafe Maya 1x14 364 g"
+  },
+  {
+    "codigo": "100100",
+    "descripcion": "Café Maya Selecto 1x12 312 g"
+  },
+  {
+    "codigo": "100102",
+    "descripcion": "Café Maya De Palo 340 g"
+  },
+  {
+    "codigo": "100104",
+    "descripcion": "Café Maya Reserva 340g"
+  },
+  {
+    "codigo": "100124",
+    "descripcion": "Café Maya 1x12 312 g"
+  },
+  {
+    "codigo": "120121",
+    "descripcion": "Cafe Medalla 1x15 390 g"
+  },
+  {
+    "codigo": "120122",
+    "descripcion": "Cafe Medalla 1x8 208 g"
+  },
+  {
+    "codigo": "120123",
+    "descripcion": "Cafe Medalla 1x14 364 g"
+  },
+  {
+    "codigo": "120124",
+    "descripcion": "Cafe Medalla 1x12 312 g"
+  },
+  {
+    "codigo": "130006",
+    "descripcion": "Café Suli 1x16 432 g"
+  },
+  {
+    "codigo": "130013",
+    "descripcion": "Café Suli 1x8 216g"
+  },
+  {
+    "codigo": "140013",
+    "descripcion": "Crema para café Maya 1x24x50x4g"
+  },
+  {
+    "codigo": "140014",
+    "descripcion": "Cremora en bote 1x12x170g"
+  },
+  {
+    "codigo": "150001",
+    "descripcion": "Café Casinos 1x14 350 g"
+  },
+  {
+    "codigo": "170009",
+    "descripcion": "Indio Espresso Roast 12 Onz"
+  },
+  {
+    "codigo": "170010",
+    "descripcion": "Indio Espresso Roast 12 Onz(Gr"
+  },
+  {
+    "codigo": "170011",
+    "descripcion": "Indio Tipo Arabe 12 Onz"
+  },
+  {
+    "codigo": "170012",
+    "descripcion": "Indio Percolador 12 Onz"
+  },
+  {
+    "codigo": "170013",
+    "descripcion": "Indio Medium Roast 12 Onz"
+  },
+  {
+    "codigo": "170014",
+    "descripcion": "Indio Medium Roast 12 Onz(Gran"
+  },
+  {
+    "codigo": "170015",
+    "descripcion": "Indio Tradicional 390 gr"
+  },
+  {
+    "codigo": "170016",
+    "descripcion": "Indio 208 gr"
+  },
+  {
+    "codigo": "170024",
+    "descripcion": "Oro 216 gr"
+  },
+  {
+    "codigo": "170025",
+    "descripcion": "Oro 378 gr"
+  },
+  {
+    "codigo": "170028",
+    "descripcion": "Oro 405 gr"
+  },
+  {
+    "codigo": "170029",
+    "descripcion": "Oro Torrefacto Caja Export 432 g"
+  },
+  {
+    "codigo": "170030",
+    "descripcion": "Indio Torrefacto Caja Export 432 g"
+  },
+  {
+    "codigo": "170038",
+    "descripcion": "Indio Tradicional 364 g"
+  },
+  {
+    "codigo": "170040",
+    "descripcion": "Oro 324 g"
+  },
+  {
+    "codigo": "170046",
+    "descripcion": "Indio Tradicional 312 g"
+  },
+  {
+    "codigo": "170047",
+    "descripcion": "Rey 1x14 350 g"
+  },
+  {
+    "codigo": "170048",
+    "descripcion": "Corona 1x14 350 g"
+  },
+  {
+    "codigo": "170050",
+    "descripcion": "Oro Soluble 170 g"
+  },
+  {
+    "codigo": "170059",
+    "descripcion": "Delicia 1x14 350 g"
+  },
+  {
+    "codigo": "170060",
+    "descripcion": "Combo Oro 378 g + Rey 350 g + Delicia 350 g"
+  },
+  {
+    "codigo": "170061",
+    "descripcion": "Combo Oro 378 g + Medalla 364 g + Delicia 350 g"
+  },
+  {
+    "codigo": "170063",
+    "descripcion": "Combo Oro 378 g + Maya 364 g + Corona 350 g"
+  },
+  {
+    "codigo": "170064",
+    "descripcion": "Combos 5 Pack Oro 378 gr + 1 Oro 216 g"
+  },
+  {
+    "codigo": "310010",
+    "descripcion": "Crismelos Gusanito 1 Caja x 12 Frascos x 160 Unidades"
+  },
+  {
+    "codigo": "310018",
+    "descripcion": "CRISMELOS Gigante Bicolor 1C x 10 Bol x 30 Und x 24 g"
+  },
+  {
+    "codigo": "310023",
+    "descripcion": "Crismelos Blanco 1 Caja x 20 Bolsas x 50 Unid x 300 g"
+  },
+  {
+    "codigo": "310024",
+    "descripcion": "Crismelos Color 1 Caja x 20 Bolsas x 50 Unid x 300 g"
+  },
+  {
+    "codigo": "310025",
+    "descripcion": "Crismelos Color 1 Caja x 20 Bolsas x 100 Unid x 300 g"
+  },
+  {
+    "codigo": "310038",
+    "descripcion": "CRISMELOS Gigante Blanco 1C x 10 Bol x 30 Und x 24 g"
+  },
+  {
+    "codigo": "310043",
+    "descripcion": "Malvavisco Tira Chocale 8x10x35 g"
+  },
+  {
+    "codigo": "310054",
+    "descripcion": "Crismelos Color 18 x 150 g"
+  },
+  {
+    "codigo": "310067",
+    "descripcion": "Malvavisco CRISMELOS Color 15x240 g"
+  },
+  {
+    "codigo": "310068",
+    "descripcion": "Malvavisco CRISMELOS Blanco 15x240 g"
+  },
+  {
+    "codigo": "310069",
+    "descripcion": "Malvavisco CRISMELOS blanco 18x150 g"
+  },
+  {
+    "codigo": "310074",
+    "descripcion": "Malvaviscos Bolsón Zoo Bongy 24x50x5 g"
+  },
+  {
+    "codigo": "310076",
+    "descripcion": "Malvaviscos MarshmellOsos 24x50x5 g"
+  },
+  {
+    "codigo": "310083",
+    "descripcion": "Malvaviscos Tira Mini CRISMELOS 12x12x40 g"
+  },
+  {
+    "codigo": "310086",
+    "descripcion": "Bandeja Ositos 12*540 g"
+  },
+  {
+    "codigo": "310087",
+    "descripcion": "Bandeja Culebra Transp 12*540 g"
+  },
+  {
+    "codigo": "310089",
+    "descripcion": "Bandeja Aros Sandia 12*540 g"
+  },
+  {
+    "codigo": "310090",
+    "descripcion": "Bandeja Corazones 12*540 g"
+  },
+  {
+    "codigo": "310092",
+    "descripcion": "CRISMELOS Gota 1x20x100 g"
+  },
+  {
+    "codigo": "310094",
+    "descripcion": "Bombones Napolitano 15x225 g"
+  },
+  {
+    "codigo": "310097",
+    "descripcion": "Tira Chocale Chocolate 8x10x35 g"
+  },
+  {
+    "codigo": "310099",
+    "descripcion": "Tira Chocale Banana 8x10x35 g"
+  },
+  {
+    "codigo": "310100",
+    "descripcion": "Tira Chocale Fresa 8x10x35 g"
+  },
+  {
+    "codigo": "330007",
+    "descripcion": "Chicleton Venus SURTIDO 1 Caja x 12 Bolsas x 100 Unidades"
+  },
+  {
+    "codigo": "330008",
+    "descripcion": "Chicleton Venus MENTA 1 Caja x 12 Bolsas x 100 Unidades"
+  },
+  {
+    "codigo": "330010",
+    "descripcion": "Confite Venus MIEL 1 Caja X 12 Bolsas X 100 Unidades"
+  },
+  {
+    "codigo": "330011",
+    "descripcion": "Chicleton Venus MORITA 1 Caja X 12 Bolsas X 100 Unidades"
+  },
+  {
+    "codigo": "330012",
+    "descripcion": "Chicleton Venus CERECITA 1 Caja X 12 Bolsas X 100 Unidades"
+  },
+  {
+    "codigo": "330013",
+    "descripcion": "Chicletón Venus MENTA CHOCOLATE 1 Caja X 12 Bolsas X 10 Unidades"
+  },
+  {
+    "codigo": "330016",
+    "descripcion": "Chicleton Venus SANDIA 1 Caja X 12 Bolsas X 100 Unidades"
+  },
+  {
+    "codigo": "330017",
+    "descripcion": "Paleta Venus Dulce Amor CEREZA 16x40"
+  },
+  {
+    "codigo": "330018",
+    "descripcion": "Paleta Venus Dulce Amor SANDIA 16x40"
+  },
+  {
+    "codigo": "330019",
+    "descripcion": "Paleta Venus SUAVE FRUTA 30 x 40"
+  },
+  {
+    "codigo": "330020",
+    "descripcion": "Confite Venus Duro Fiesta GIGANTE 12 x 3 LB"
+  },
+  {
+    "codigo": "330021",
+    "descripcion": "Confite Venus JUMBO 6 x 5 LB"
+  },
+  {
+    "codigo": "330029",
+    "descripcion": "Bombón Venus Dolche SURTIDO 1F x 10 Bolsas x 48 Unidades"
+  },
+  {
+    "codigo": "330036",
+    "descripcion": "Paleta Venus MAS AMOR CEREZA 1 Caja x 25 Bolsas x 25 Unidades"
+  },
+  {
+    "codigo": "330037",
+    "descripcion": "Paleta Venus MAS AMOR SANDIA 1 Caja x 25 Bolsas x 25 Unidades"
+  },
+  {
+    "codigo": "330038",
+    "descripcion": "Confite relleno de EUCALIPTO 1C x 12 Bolsas x 100 Unidades"
+  },
+  {
+    "codigo": "330041",
+    "descripcion": "Confite RELLENO DE CAFE 1Caja x 12 Bolsas x 100 Unidades"
+  },
+  {
+    "codigo": "330046",
+    "descripcion": "Candy Mix 4X10"
+  },
+  {
+    "codigo": "330047",
+    "descripcion": "Confite COFFE TOFFE 12x100"
+  },
+  {
+    "codigo": "330049",
+    "descripcion": "Chicleton Venus MANGO 1 Caja x 12 Bolsas x 100 Unidades"
+  },
+  {
+    "codigo": "330050",
+    "descripcion": "Confite Candi Mix 15 lbs"
+  },
+  {
+    "codigo": "330051",
+    "descripcion": "Paleta Pops Kiss 15x24"
+  },
+  {
+    "codigo": "330054",
+    "descripcion": "Confite menta largo 12x100"
+  },
+  {
+    "codigo": "330056",
+    "descripcion": "Bombón Big Twist Surtido 12x24"
+  },
+  {
+    "codigo": "330057",
+    "descripcion": "Bombón Big Twist Surtido 10x48"
+  },
+  {
+    "codigo": "330062",
+    "descripcion": "Confite Venus MENTA Cuadrada 50 bolsas x 40 Unidades"
+  },
+  {
+    "codigo": "330063",
+    "descripcion": "Confite Venus VAQUITA 50 bolsas x 40 Unidades"
+  },
+  {
+    "codigo": "330066",
+    "descripcion": "Paleta Lechita 15x24x14g"
+  },
+  {
+    "codigo": "330067",
+    "descripcion": "Bombón Surtido 1x15x24 408g"
+  },
+  {
+    "codigo": "330068",
+    "descripcion": "Bombón Twist Surtido 1x15x24 408g"
+  },
+  {
+    "codigo": "330069",
+    "descripcion": "Bombon YOGURT 15x24x17g"
+  },
+  {
+    "codigo": "330070",
+    "descripcion": "Bombon COCO 15x24x17g"
+  },
+  {
+    "codigo": "330071",
+    "descripcion": "Bombon ICE CREAM 15x24x17g"
+  },
+  {
+    "codigo": "330072",
+    "descripcion": "Bombon DULCE DE LECHE 15x24x17g"
+  },
+  {
+    "codigo": "330073",
+    "descripcion": "Bombon ROJO BOOM 15x24x17g"
+  },
+  {
+    "codigo": "330074",
+    "descripcion": "Bombon SANDÍA 15x24x17g"
+  },
+  {
+    "codigo": "330075",
+    "descripcion": "Bombon MANGO 15x24x17g"
+  },
+  {
+    "codigo": "330076",
+    "descripcion": "Bombon LYCHEE 15x24x17g"
+  },
+  {
+    "codigo": "330077",
+    "descripcion": "Bombon KOOL 15x24x17g"
+  },
+  {
+    "codigo": "330078",
+    "descripcion": "Chicle VENUS Gool Tutti Frutti 1x50x36"
+  },
+  {
+    "codigo": "330079",
+    "descripcion": "Chicle VENUS Menta 1x50x36"
+  },
+  {
+    "codigo": "330080",
+    "descripcion": "Confite Venus MENTA 50 bolsas x 40 Unidades 160g"
+  },
+  {
+    "codigo": "330081",
+    "descripcion": "Confite Venus FIESTA 50 bolsas x 40 Unidades 160g"
+  },
+  {
+    "codigo": "330082",
+    "descripcion": "Pop Kiss Mora Azul VENUS 15x24"
+  },
+  {
+    "codigo": "340010",
+    "descripcion": "CHOCOLISTO Tarro 12x300g"
+  },
+  {
+    "codigo": "340011",
+    "descripcion": "CHOCOLISTO Fresa 24x200g"
+  },
+  {
+    "codigo": "340013",
+    "descripcion": "CHOCOLISTO 18x200g"
+  },
+  {
+    "codigo": "340016",
+    "descripcion": "CHOCOLISTO ristra 25x12x14g"
+  },
+  {
+    "codigo": "340024",
+    "descripcion": "CHOCOLISTO choco 12x360g"
+  },
+  {
+    "codigo": "340026",
+    "descripcion": "Chocolisto Mashmellows 150gx18"
+  },
+  {
+    "codigo": "340027",
+    "descripcion": "Bolitas de Chocolate Leche Arroz"
+  },
+  {
+    "codigo": "350017",
+    "descripcion": "TOSH Granola Avena Pasas 16x300g"
+  },
+  {
+    "codigo": "350018",
+    "descripcion": "TOSH Granola Semilla Chia 16x300g"
+  },
+  {
+    "codigo": "370003",
+    "descripcion": "Galleta Best xl 40gr 24 bolsa 12 und"
+  },
+  {
+    "codigo": "370005",
+    "descripcion": "Chapetin 24 paquetes de 12 unidades"
+  },
+  {
+    "codigo": "370012",
+    "descripcion": "Chocogol caja de 12 botes de 150 und"
+  },
+  {
+    "codigo": "370015",
+    "descripcion": "Conito 12 botes de 70 uni"
+  },
+  {
+    "codigo": "370029",
+    "descripcion": "Choco Panda Syrup 1 caja 12 botes 14 oz"
+  },
+  {
+    "codigo": "370030",
+    "descripcion": "Galleta Best Chocolate oscuro 24 paq 12 Unidades"
+  },
+  {
+    "codigo": "370032",
+    "descripcion": "Chocopanda 36 cajitas 285 gr"
+  },
+  {
+    "codigo": "370033",
+    "descripcion": "Chocopanda Doy pack 24 bolsas 200 gr"
+  },
+  {
+    "codigo": "370035",
+    "descripcion": "Chocopanda bote 400 gr 24 unidades"
+  },
+  {
+    "codigo": "370037",
+    "descripcion": "Galleta Best fresa 24 paquetes de 12 Unidades"
+  },
+  {
+    "codigo": "370040",
+    "descripcion": "Galleta Best 20g 24 paq de 12 Unidades"
+  },
+  {
+    "codigo": "370044",
+    "descripcion": "Galleta Manicotti 24 paq x 12 Unidades 34gr"
+  },
+  {
+    "codigo": "370048",
+    "descripcion": "Manicotti 156g 24paq de 12 Unidades 13g"
+  },
+  {
+    "codigo": "370051",
+    "descripcion": "Botoneta Mani Cobert Choco 240g 36Bolsas"
+  },
+  {
+    "codigo": "370052",
+    "descripcion": "Botoneta Chocolate 240g 36Bolsas"
+  },
+  {
+    "codigo": "370053",
+    "descripcion": "BEST Chocolate Relleno Doypack 212.5g 24Bolsas"
+  },
+  {
+    "codigo": "370055",
+    "descripcion": "Chapetín XL 24paq x 12 x 40g"
+  },
+  {
+    "codigo": "370056",
+    "descripcion": "Conito 90x10 7g"
+  },
+  {
+    "codigo": "370057",
+    "descripcion": "Chocofruta Tableta 32x300g"
+  },
+  {
+    "codigo": "370058",
+    "descripcion": "Chocogol 50x40 4g"
+  },
+  {
+    "codigo": "370059",
+    "descripcion": "Chocofruta Chongo 1400g"
+  },
+  {
+    "codigo": "370064",
+    "descripcion": "Chocofruta 350g 1x50"
+  },
+  {
+    "codigo": "370067",
+    "descripcion": "Chocogol 4g 8 disp x 250 Unidades"
+  },
+  {
+    "codigo": "370068",
+    "descripcion": "Botoneta maní doypack 85g 1 x 52 bolsas"
+  },
+  {
+    "codigo": "370069",
+    "descripcion": "Botoneta chocolate doypack 85g 1 x 52 bolsas"
+  },
+  {
+    "codigo": "370070",
+    "descripcion": "Chocofruta 700g 1 x 25"
+  },
+  {
+    "codigo": "370071",
+    "descripcion": "BEST Piñata Mix 12x734gg"
+  },
+  {
+    "codigo": "370072",
+    "descripcion": "Botoneta Chocolate 20x24x9g"
+  },
+  {
+    "codigo": "370073",
+    "descripcion": "Botoneta Maní 20x24x9g"
+  },
+  {
+    "codigo": "370074",
+    "descripcion": "Galleta Best vainilla 26g 24 paq x 12 Unidades"
+  },
+  {
+    "codigo": "370075",
+    "descripcion": "Botonetas Gold 50g 12 display x 12 Unidades"
+  },
+  {
+    "codigo": "370076",
+    "descripcion": "Pedritos 10g, 40 paquetes, 12 Unidades"
+  },
+  {
+    "codigo": "370077",
+    "descripcion": "Tableta Best 16Dsx16Ux8G"
+  },
+  {
+    "codigo": "370079",
+    "descripcion": "MANIN BOTONETA Y MANI 50x70G"
+  },
+  {
+    "codigo": "370083",
+    "descripcion": "MANIN BOTONETA Y MANI 20Rx24x15G"
+  },
+  {
+    "codigo": "390013",
+    "descripcion": "GRANUTS Party Mix 540g 8x12x45g"
+  },
+  {
+    "codigo": "390018",
+    "descripcion": "GRANUTS Gragea arándanos 8x10x50g"
+  },
+  {
+    "codigo": "390019",
+    "descripcion": "GRANUTS Gragea pasas 8x10x50g"
+  },
+  {
+    "codigo": "390020",
+    "descripcion": "GRANUTS Gragea almendra 8x10x40g"
+  },
+  {
+    "codigo": "390047",
+    "descripcion": "GRANUTS Arandamix 130 gramos 14x130g"
+  },
+  {
+    "codigo": "390048",
+    "descripcion": "GRANUTS Fiestamix 130 gramos 14x130g"
+  },
+  {
+    "codigo": "390049",
+    "descripcion": "GRANUTS Grillmix 130 gramos 14x130g"
+  },
+  {
+    "codigo": "390058",
+    "descripcion": "Mezcla nueces GRANUTS 540G 8X12X45G"
+  },
+  {
+    "codigo": "390059",
+    "descripcion": "Mezcla arándanos GRANUTS 540g 8x12x45g"
+  },
+  {
+    "codigo": "390060",
+    "descripcion": "Mezcla nueces GRANUTS180g 12x180g"
+  },
+  {
+    "codigo": "390061",
+    "descripcion": "GRANUTS Mezcla de arándanos 180g12x180g"
+  },
+  {
+    "codigo": "390063",
+    "descripcion": "GRANUTS Party Mix 180g12x180g"
+  },
+  {
+    "codigo": "390066",
+    "descripcion": "GRANUTS Surtido 520g 8x45g 4x40g"
+  },
+  {
+    "codigo": "390067",
+    "descripcion": "GRANUTS Sweet & Salty 12x180g"
+  },
+  {
+    "codigo": "390069",
+    "descripcion": "GRANUTS Gragea marañón 8x10x40g"
+  },
+  {
+    "codigo": "390070",
+    "descripcion": "GRANUTS Barbacoa Mix 180g"
+  },
+  {
+    "codigo": "390071",
+    "descripcion": "Mezcla Tajín GRANUTS 150g 12x150g"
+  },
+  {
+    "codigo": "390072",
+    "descripcion": "Mezcla Tajín GRANUTS 540g 8x12x45g"
+  },
+  {
+    "codigo": "410003",
+    "descripcion": "Chiles jalapeños en trocitos en salmuera"
+  },
+  {
+    "codigo": "410004",
+    "descripcion": "Rodajas de chiles jalapeños para nachos"
+  },
+  {
+    "codigo": "420001",
+    "descripcion": "Galleta CREMAS VAIVAI 24x12x22g"
+  },
+  {
+    "codigo": "420006",
+    "descripcion": "Galletas CREME O! vainilla con relleno sabor chocolate"
+  },
+  {
+    "codigo": "420007",
+    "descripcion": "Galletas CREME O! vainilla con relleno sabor fresa"
+  },
+  {
+    "codigo": "420008",
+    "descripcion": "Galletas CREME O! vainilla con relleno sabor vainilla"
+  },
+  {
+    "codigo": "010165",
+    "descripcion": "Indio Medium Roast 12 Onz (Grano)"
+  },
+  {
+    "codigo": "0101107",
+    "descripcion": "Indio Tradicional 364 g"
+  },
+  {
+    "codigo": "010214",
+    "descripcion": "Oro 378 gr"
+  }
+]

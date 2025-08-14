@@ -263,7 +263,7 @@
 
     function buscarDescripcion() {
         const codigo = document.getElementById('codigo').value;
-        fetch('bdd_bodega.json')
+        fetch('bdd_descripcion.json')
             .then(response => response.json())
             .then(data => {
                 if (data[codigo]) {

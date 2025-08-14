@@ -325,11 +325,15 @@
 
     const registro = {
         fecha: fecha,
+        proveedor: proveedor,
         codigo: codigo,
         descripcion: descripcion,
+        reporteria: reporteria,
+        factor: factor,
         cajas: cajas,
         unidades: unidades,
-        total_unidades: total
+        total_unidades: total,
+        diferencia: diferencia
     };
 
     registros.push(registro);
@@ -338,10 +342,13 @@
     alert("Registro guardado.");
 
     // Limpiar campos
-    document.getElementById('codigo').value = '';
+    document.getElementById('proveedor').value = '';
+    document.getElementById('codigo').value = ''; 
+    document.getElementById('descripcion').value = '';
+    document.getElementById('reporteria').value = '';
+    document.getElementById('factor').value = '';
     document.getElementById('cajas').value = '';
     document.getElementById('unidades').value = '';
-    document.getElementById('descripcion').value = '';
     document.getElementById('total-unidades').textContent = '0';
 }
 
@@ -360,11 +367,11 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `cuadre_inventario_${fecha.replace(/\//g, '-')}.json`;
+        a.download = `cuadre_inventario_${fecha.replace(/\//g, '-')}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 
-        alert("Archivo JSON generado y descargado.");
+        alert("Archivo CSV generado y descargado.");
     }
 
     // Funciones de edición y eliminación de filas (sin cambios)

@@ -317,8 +317,9 @@
         const total = cajas * unidades * factor;
         const diferencia = reporteria - total;
 
-    const tabla = document.querySelector("table");
-    const nuevaFila = tabla.insertRow(-1);
+    const tabla = document.querySelector("#tabla-registros tbody");
+    const nuevaFila = tabla.insertRow();
+        
     nuevaFila.innerHTML = `
         <td>${fecha}</td>
         <td>${proveedor}</td>
@@ -348,17 +349,28 @@
     }
 
     function finalizar() {
+        const filas = document.querySelectorAll("#tabla-registros tbody tr");
         if (registros.length === 0) {
             alert("No hay registros para guardar.");
             return;
         }
 
+        let csv = [];
+        const encabezados = Array.from(document.querySelectorAll("#tabla-registros thead th"))
+        .map(th => th.innerText.trim());
+        csv.push(encabezados.join(","));
+
+        filas.forEach(fila => {
+        const datos = Array.from(fila.cells).map(td => td.innerText.trim());
+        csv.push(datos.join(","));
+    });
+
         const fecha = new Date().toLocaleDateString('es-ES');
-        const blob = new Blob([JSON.stringify(registros, null, 2)], { type: 'application/json' });
+        const blob = new Blob([csv.join("\n")], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `cuadre_inventario_${fecha.replace(/\//g, '-')}.csv`;
+                a.href = url;
+        a.download = `Cuadre_inventario_${fecha.replace(/\//g, '-')}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 

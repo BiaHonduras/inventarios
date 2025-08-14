@@ -277,6 +277,38 @@
             });
     }
 
+    function buscarProveedor() {
+        const codigo = document.getElementById('codigo').value;
+        fetch('bdd_proveedor.json')
+            .then(response => response.json())
+            .then(data => {
+                if (data[codigo]) {
+                    document.getElementById('proveedor').value = data[codigo];
+                } else {
+                    document.getElementById('proveedor').value = "Por favor verificar el código ingresado";
+                }
+            })
+            .catch(() => {
+                document.getElementById('proveedor').value = "Error al cargar la base de datos";
+            });
+    }
+
+    function buscarFactor() {
+        const codigo = document.getElementById('codigo').value;
+        fetch('bdd_factor.json')
+            .then(response => response.json())
+            .then(data => {
+                if (data[codigo]) {
+                    document.getElementById('factor').value = data[codigo];
+                } else {
+                    document.getElementById('factor').value = "Por favor verificar el código ingresado";
+                }
+            })
+            .catch(() => {
+                document.getElementById('factor').value = "Error al cargar la base de datos";
+            });
+    }
+
     function guardar() {
     const fecha = new Date().toLocaleDateString('es-ES');
     const proveedor = document.getElementById('proveedor').value;

@@ -265,10 +265,16 @@
     }
 
     function calcularTotal() {
-        const factor = parseInt(document.getElementById('factor').value) || 0;
-        const cajas = parseInt(document.getElementById('cajas').value) || 0;
-        const unidades = parseInt(document.getElementById('unidades').value) || 1;
-        const total = (cajas * factor) + unidades;
+        const factor = parseFloat(document.getElementById('factor').value) || 1;
+        const cajas = parseFloat(document.getElementById('cajas').value) || 0;
+        const unidades = parseFloat(document.getElementById('unidades').value);
+
+        // Validar que unidades no sea NaN
+        const unidadesValidadas = isNaN(unidades) ? 0 : unidades
+        
+        // Fórmula corregida
+        const total = (cajas * factor) + unidadesValidadas;
+
         document.getElementById('total-unidades').textContent = total;
     }
 

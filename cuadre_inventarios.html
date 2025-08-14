@@ -111,6 +111,13 @@
             margin-top: 30px;
             background-color: white;
         }
+
+        
+        #registrosGuardados {
+            background-color: #d3d3d3; /* Gris claro */
+            padding: 5px;
+            font-weight: bold;
+        }
         
         table, th, td {
             border: 1px solid #999;
@@ -219,7 +226,9 @@
     </div>
     
     <div class="registro-table">
-    <h3 style="text-align:center;">Registros Guardados</h3>
+    
+    <h3 id="registrosGuardados">Registros Guardados</h3>
+
     <table id="tabla-registros">
         <thead>
             <tr>
@@ -261,53 +270,40 @@
         document.getElementById('total-unidades').textContent = total;
     }
 
-    function buscarDescripcion() {
-        const codigo = document.getElementById('codigo').value;
-        fetch('bdd_descripcion.json')
-            .then(response => response.json())
-            .then(data => {
-                if (data[codigo]) {
-                    document.getElementById('descripcion').value = data[codigo];
-                } else {
-                    document.getElementById('descripcion').value = "Por favor verificar el código ingresado";
-                }
-            })
-            .catch(() => {
-                document.getElementById('descripcion').value = "Error al cargar la base de datos";
-            });
-    }
+    
+document.getElementById("btnBuscar").addEventListener("click", function() {
+    const codigo = document.getElementById("codigo").value;
 
-    function buscarProveedor() {
-        const codigo = document.getElementById('codigo').value;
-        fetch('bdd_proveedor.json')
-            .then(response => response.json())
-            .then(data => {
-                if (data[codigo]) {
-                    document.getElementById('proveedor').value = data[codigo];
-                } else {
-                    document.getElementById('proveedor').value = "Por favor verificar el código ingresado";
-                }
-            })
-            .catch(() => {
-                document.getElementById('proveedor').value = "Error al cargar la base de datos";
-            });
-    }
+    // Descripción
+    fetch("bdd_descripcion.json")
+        .then(response => response.json())
+        .then(data => {
+            const item = data.find(d => d.codigo === codigo);
+            if (item) {
+                document.getElementById("descripcion").value = item.descripcion;
+            }
+        });
 
-    function buscarFactor() {
-        const codigo = document.getElementById('codigo').value;
-        fetch('bdd_factor.json')
-            .then(response => response.json())
-            .then(data => {
-                if (data[codigo]) {
-                    document.getElementById('factor').value = data[codigo];
-                } else {
-                    document.getElementById('factor').value = "Por favor verificar el código ingresado";
-                }
-            })
-            .catch(() => {
-                document.getElementById('factor').value = "Error al cargar la base de datos";
-            });
-    }
+    // Proveedor
+    fetch("bdd_proveedor.json")
+        .then(response => response.json())
+        .then(data => {
+            const item = data.find(d => d.codigo === codigo);
+            if (item) {
+                document.getElementById("proveedor").value = item.proveedor;
+            }
+        });
+
+    // Factor
+    fetch("bdd_factor.json")
+        .then(response => response.json())
+        .then(data => {
+            const item = data.find(d => d.codigo === codigo);
+            if (item) {
+                document.getElementById("factor").value = item.factor;
+            }
+        });
+});
 
     function guardar() {
     const fecha = new Date().toLocaleDateString('es-ES');

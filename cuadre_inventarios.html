@@ -321,7 +321,7 @@
         const factor = document.getElementById('factor').value;
         const cajas = document.getElementById('cajas').value;
         const unidades = document.getElementById('unidades').value;
-        const total = cajas * unidades * factor;
+        const total = (cajas * factor) + unidades;
         const diferencia = reporteria - total;
 
     const tabla = document.querySelector("#tabla-registros tbody");

@@ -215,16 +215,13 @@
     <table id="tabla-registros">
         <thead>
             <tr>
+                <th>Fecha</th>
                 <th>Proveedor</th>
                 <th>Código</th>
                 <th>Descripción</th>
-                <th>Reportería</th>
-                <th>Factor</th>
-                <th>Cajas</th>
+                <th>Cajas / Farodos</th>
                 <th>Unidades</th>
                 <th>Total</th>
-                <th>Diferencia</th>
-                <th>Justificación</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -246,7 +243,7 @@
     }
 
     function calcularTotal() {
-        const factor = 12;
+        const factor = parseInt(document.getElementById('factor').value) || 0;
         const cajas = parseInt(document.getElementById('cajas').value) || 0;
         const unidades = parseInt(document.getElementById('unidades').value) || 0;
         const total = (cajas * factor) + unidades;
@@ -271,11 +268,15 @@
 
     function guardar() {
     const fecha = new Date().toLocaleDateString('es-ES');
+    const proveedor = document.getElementById('proveedor').value;
     const codigo = document.getElementById('codigo').value;
+    const descripcion = document.getElementById('descripcion').value;
+    const reporteria = document.getElementById('reporteria').value;
+    const factor = document.getElementById('factor').value;
     const cajas = document.getElementById('cajas').value;
     const unidades = document.getElementById('unidades').value;
-    const descripcion = document.getElementById('descripcion').value;
     const total = document.getElementById('total-unidades').textContent;
+    const diferencia = document.getElementById('diferencia').value;
 
     const registro = {
         fecha: fecha,

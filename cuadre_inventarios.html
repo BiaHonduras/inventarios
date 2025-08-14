@@ -270,8 +270,7 @@
         document.getElementById('total-unidades').textContent = total;
     }
 
-    
-document.getElementById("btnBuscar").addEventListener("click", function() {
+    unction buscarDescripcion() {
     const codigo = document.getElementById("codigo").value;
 
     // Descripción
@@ -303,7 +302,7 @@ document.getElementById("btnBuscar").addEventListener("click", function() {
                 document.getElementById("factor").value = item.factor;
             }
         });
-});
+}
 
     function guardar() {
     const fecha = new Date().toLocaleDateString('es-ES');

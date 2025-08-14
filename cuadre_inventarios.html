@@ -267,7 +267,7 @@
     function calcularTotal() {
         const factor = parseInt(document.getElementById('factor').value) || 0;
         const cajas = parseInt(document.getElementById('cajas').value) || 0;
-        const unidades = parseInt(document.getElementById('unidades').value) || 0;
+        const unidades = parseInt(document.getElementById('unidades').value) || 1;
         const total = (cajas * factor) + unidades;
         document.getElementById('total-unidades').textContent = total;
     }

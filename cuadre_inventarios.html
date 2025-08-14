@@ -245,7 +245,8 @@
                 <th>Diferencia</th>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+        </tbody>
     </table>
 </div>
 
@@ -341,8 +342,7 @@
     document.getElementById("factor").value = "";
     document.getElementById("cajas").value = "";
     document.getElementById("unidades").value = "";
-
-    alert("Registro guardado correctamente.");
+    
 }
 
     function salir() {
@@ -351,7 +351,7 @@
 
     function finalizar() {
         const filas = document.querySelectorAll("#tabla-registros tbody tr");
-        if (registros.length === 0) {
+        if (filas.length === 0) {
             alert("No hay registros para guardar.");
             return;
         }
@@ -369,9 +369,9 @@
         const fecha = new Date().toLocaleDateString('es-ES');
         const blob = new Blob([csv.join("\n")], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-                a.href = url;
-        a.download = `Cuadre_inventario_${fecha.replace(/\//g, '-')}.csv`;
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Cuadre_inventario_${fecha.replace(/\//g, '-')}.csv";
         a.click();
         URL.revokeObjectURL(url);
 

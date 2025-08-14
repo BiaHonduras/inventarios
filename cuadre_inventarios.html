@@ -310,40 +310,37 @@
         const proveedor = document.getElementById('proveedor').value;
         const codigo = document.getElementById('codigo').value;
         const descripcion = document.getElementById('descripcion').value;
-        const reporteria = document.getElementById('reporteria').value;
+        const reporteria = "";
         const factor = document.getElementById('factor').value;
         const cajas = document.getElementById('cajas').value;
         const unidades = document.getElementById('unidades').value;
-        const total = document.getElementById('total-unidades').textContent;
-        const diferencia = document.getElementById('diferencia').value;
+        const total = cajas * unidades * factor;
+        const diferencia = reporteria - total;
 
-    const registro = {
-        fecha: fecha,
-        proveedor: proveedor,
-        codigo: codigo,
-        descripcion: descripcion,
-        reporteria: reporteria,
-        factor: factor,
-        cajas: cajas,
-        unidades: unidades,
-        total_unidades: total,
-        diferencia: diferencia
-    };
-
-    registros.push(registro);
-    agregarFilaTabla(registro);
-
-    alert("Registro guardado con exito");
+    const tabla = document.querySelector("table");
+    const nuevaFila = tabla.insertRow(-1);
+    nuevaFila.innerHTML = `
+        <td>${fecha}</td>
+        <td>${proveedor}</td>
+        <td>${codigo}</td>
+        <td>${descripcion}</td>
+        <td>${reporteria}</td>
+        <td>${cajas}</td>
+        <td>${unidades}</td>
+        <td>${total}</td>
+        <td>${diferencia}</td>
+        <td></td>
+    `;
 
     // Limpiar campos
-    document.getElementById('proveedor').value = '';
-    document.getElementById('codigo').value = ''; 
-    document.getElementById('descripcion').value = '';
-    document.getElementById('reporteria').value = '';
-    document.getElementById('factor').value = '';
-    document.getElementById('cajas').value = '';
-    document.getElementById('unidades').value = '';
-    document.getElementById('total-unidades').textContent = '0';
+    document.getElementById("proveedor").value = "";
+    document.getElementById("codigo").value = "";
+    document.getElementById("descripcion").value = "";
+    document.getElementById("factor").value = "";
+    document.getElementById("cajas").value = "";
+    document.getElementById("unidades").value = "";
+
+    alert("Registro guardado correctamente.");
 }
 
     function salir() {

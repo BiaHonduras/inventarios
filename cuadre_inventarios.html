@@ -228,10 +228,11 @@
         <button onclick="guardar()">Guardar</button>
         <button onclick="salir()">Salir</button>
         <button onclick="finalizar()">Finalizar</button>
+    </div>
 
+    <div class="buttons">
         <input type="file" id="archivoReporteria" accept=".xlsx">
         <button onclick="importarReporteria()">Importar Reportería</button>
-
     </div>
     
     <div class="registro-table">
@@ -325,7 +326,7 @@
         const proveedor = document.getElementById('proveedor').value;
         const codigo = document.getElementById('codigo').value;
         const descripcion = document.getElementById('descripcion').value;
-        const reporteria = "";
+        const reporteria = filaExcel["Cantidad"];
         const factor = document.getElementById('factor').value;
         const cajas = document.getElementById('cajas').value;
         const unidades = document.getElementById('unidades').value;
@@ -397,14 +398,14 @@
     let datosReporteria = {};
 
     function importarReporteria() {
-        const archivo = document.getElementById("archivoReporteria").files[0];
+            const archivo = document.getElementById("archivoReporteria").files[0];
             if (!archivo) {
             alert("Por favor selecciona un archivo Excel.");
             return;
     }
 
     const lector = new FileReader();
-    lector.onload = function(e) {
+        lector.onload = function(e) {
         const datos = new Uint8Array(e.target.result);
         const libro = XLSX.read(datos, { type: "array" });
 

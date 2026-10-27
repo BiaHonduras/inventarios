@@ -469,7 +469,7 @@
             100% { top: 40%; }
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 1023px) {
             .sidebar {
                 transform: translateX(-100%);
                 position: fixed;
@@ -977,13 +977,44 @@
         .assistant-chip { color:#425775; }
         .assistant-chip:hover { background:#edf3fb; border-color:#b7d2ed; }
         .assistant-empty-note { color:#708096; }
-        @media (max-width:768px) { .main-content { margin-left:0; width:100%; } }
+        @media (max-width:1023px) { .main-content { margin-left:0; width:100%; } }
+
+        /* Controles táctiles y distribución para teléfonos y tabletas. */
+        @media (max-width: 1023px) {
+            .sidebar { width:min(290px, 84vw); max-height:100dvh; overscroll-behavior:contain; }
+            .sidebar nav { padding-bottom:24px; }
+            .nav-item { min-height:44px; }
+            #menuToggle, #closeSidebar { min-width:44px; min-height:44px; }
+            .main-content > header { gap:10px; padding:10px 12px; }
+            .main-content > header h2 { font-size:18px; line-height:1.25; }
+            .main-content > main { padding:16px; }
+            .main-content > main .card { min-width:0; }
+            .overflow-x-auto { -webkit-overflow-scrolling:touch; }
+            #inventoryFooter { min-height:48px; padding:5px 12px calc(5px + env(safe-area-inset-bottom)); gap:8px; }
+            #inventoryFooter button { min-width:38px; min-height:38px; }
+            body { padding-bottom:calc(72px + env(safe-area-inset-bottom)); }
+        }
+        @media (max-width: 639px) {
+            .main-content > main { padding:12px; }
+            #inventario-diario-section > .card { padding:16px; }
+            #articuloForm { gap:14px; }
+            #articuloForm input:not([type=checkbox]), #articuloForm select { font-size:16px; min-height:46px; min-width:0; }
+            #articuloForm button { min-height:46px; }
+            #articuloForm input[type=date] { max-width:100%; }
+            #scanner-area .scanner-container { height:min(55vh, 420px); min-height:260px; }
+            #scanner-area #scanner { height:100%; }
+            #qr-scanner { width:100%; min-width:0; }
+            #qr-scanner video { max-width:100%; }
+            #inventoryFooter > div:first-child { font-size:10px; line-height:1.2; }
+            .assistant-fab { bottom:calc(65px + env(safe-area-inset-bottom)); }
+            .assistant-panel { bottom:calc(125px + env(safe-area-inset-bottom)); max-height:calc(100dvh - 145px); }
+        }
 </style>
 </head>
 	
 <body>
     <!-- Sidebar Navigation -->
-	<div class="sidebar fixed top-0 left-0 h-full text-white">
+	<div id="inventorySidebar" class="sidebar fixed top-0 left-0 h-full text-white">
     <div class="p-6">
         <div class="flex items-center justify-between mb-8">
             <div class="inventory-brand">
@@ -991,7 +1022,7 @@
                 <span>INVENTARIOS</span>
                 <a href="/intranet/intranet.html" class="intranet-return">← Intranet BIA Honduras</a>
             </div>
-            <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
+            <button id="closeSidebar" type="button" aria-label="Cerrar menú" class="lg:hidden text-white/70 hover:text-white">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -1049,7 +1080,7 @@
     <div class="main-content flex-1 min-h-screen">
         <!-- Header -->
         <header class="bg-white border-b border-gray-100 p-4 flex items-center sticky top-0 z-10">
-            <button id="menuToggle" class="lg:hidden text-gray-600 hover:text-gray-800">
+            <button id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="inventorySidebar" class="lg:hidden text-gray-600 hover:text-gray-800">
                 <i class="fas fa-bars text-xl"></i>
             </button>
             <h2 class="text-xl font-semibold text-gray-800" id="currentSectionTitle">Resumen</h2>
@@ -2932,19 +2963,26 @@
             document.getElementById('menuToggle').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.add('open');
                 document.getElementById('mobileOverlay').classList.add('open');
+                this.setAttribute('aria-expanded', 'true');
             });
             
             document.getElementById('closeSidebar').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.remove('open');
                 document.getElementById('mobileOverlay').classList.remove('open');
+                document.getElementById('menuToggle').setAttribute('aria-expanded', 'false');
             });
             
             document.getElementById('mobileOverlay').addEventListener('click', function() {
                 document.querySelector('.sidebar').classList.remove('open');
                 this.classList.remove('open');
+                document.getElementById('menuToggle').setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape' || !document.querySelector('.sidebar').classList.contains('open')) return;
+                document.getElementById('closeSidebar').click();
+                document.getElementById('menuToggle').focus();
             });
 
-			           
             // Navegación entre secciones
             document.querySelectorAll('.nav-item').forEach(item => {
     			item.addEventListener('click', function (e) {
@@ -2952,6 +2990,9 @@
 					if(!section) return;
 					
         		e.preventDefault();
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('mobileOverlay').classList.remove('open');
+                document.getElementById('menuToggle').setAttribute('aria-expanded', 'false');
 
 				if (section === 'transitos') {
     				loadTransitos();
@@ -3672,7 +3713,7 @@
             qrHandled = false;
             try {
                 qrReader = new Html5Qrcode('qr-scanner', { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
-                qrStartPromise = qrReader.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 240, height: 240 } }, async decoded => {
+                qrStartPromise = qrReader.start({ facingMode: 'environment' }, { fps: 10, qrbox: (width, height) => { const size = Math.max(50, Math.min(240, Math.floor(Math.min(width, height) * 0.72))); return { width: size, height: size }; } }, async decoded => {
                     if (qrHandled || typeof decoded !== 'string' || !decoded.trim()) return;
                     if (/[\r\n]/.test(decoded)) { status.textContent = 'El QR contiene varias líneas y no cabe en este campo.'; return; }
                     qrHandled = true;
@@ -6188,7 +6229,7 @@ function esDiaVencimiento(diaConfigurado) {
 }
 </script>
 
-<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
+<div id="inventoryFooter" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
     
     <!-- Lema -->
     <div class="text-[11px] text-gray-500">
@@ -6573,6 +6614,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 
 
 

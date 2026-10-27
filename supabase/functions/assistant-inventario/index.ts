@@ -21,30 +21,28 @@ Deno.serve(async request => {
     const payload = await request.json().catch(() => null);
     const question = typeof payload?.question === 'string' ? payload.question.trim() : '';
     if (!question || question.length > 800) return respond({ error: 'Escribe una pregunta de hasta 800 caracteres' }, 400);
-    const key = Deno.env.get('OPENAI_API_KEY');
+    const key = Deno.env.get('GEMINI_API_KEY');
     if (!key) return respond({ error: 'El asistente con IA aún no está configurado' }, 503);
     const now = Date.now();
     for (const [id, entry] of recent) if (now - entry.start > 60000) recent.delete(id);
     const entry = recent.get(auth.user.id) || { start: now, count: 0 };
     if (entry.count >= 5) return respond({ error: 'Espera un minuto antes de volver a consultar' }, 429);
     entry.count++; recent.set(auth.user.id, entry);
-    const upstream = await fetch('https://api.openai.com/v1/responses', {
+    const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
       method: 'POST', signal: AbortSignal.timeout(25000),
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input: question, max_output_tokens: 800, store: false })
+      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents: [{ role: 'user', parts: [{ text: question }] }], generationConfig: { maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 } } })
     });
     if (!upstream.ok) {
-      const payload = await upstream.json().catch(() => null);
-      const code = String(payload?.error?.code || payload?.error?.type || '');
-      const quotaCodes = ['insufficient_quota','credit_balance_exhausted','organization_spend_limit_exceeded','project_spend_limit_exceeded','organization_usage_limit_exceeded'];
-      const category = quotaCodes.includes(code) ? 'quota' : upstream.status === 429 ? 'rate_limit' : upstream.status === 401 ? 'credentials' : 'upstream';
-      console.error('OpenAI request failed', upstream.status, category);
+      const category = upstream.status === 429 ? 'gemini_limit' : [400, 401, 403].includes(upstream.status) ? 'configuration' : 'upstream';
+      console.error('Gemini request failed', upstream.status, category);
       return respond({ error: 'El asistente con IA no está disponible', reason: category }, 502);
     }
     const result = await upstream.json();
-    const answer = (result.output || []).flatMap(item => item.content || []).filter(part => part.type === 'output_text').map(part => part.text || '').join('\n').trim();
+    const answer = (result.candidates?.[0]?.content?.parts || []).map(part => typeof part.text === 'string' ? part.text : '').join('\n').trim();
     if (!answer) return respond({ error: 'El servicio de IA no devolvió una respuesta' }, 502);
     return respond({ answer });
   } catch (error) { console.error('assistant unavailable', error instanceof Error ? error.name : 'error'); return respond({ error: 'El asistente no está disponible' }, 503); }
 });
+
 

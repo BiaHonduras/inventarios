@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3e2723">
+    <meta name="theme-color" content="#102b51">
     <meta name="color-scheme" content="light">
     <title>Sistema de Control de Inventarios Diarios</title>
     
@@ -78,7 +78,6 @@
 
             if (!fab || !panel || !body || !input || !sendBtn || !closeBtn) return;
 
-            const AI_FUNCTION_NAME = 'assistant-inventario';
             let assistantBusy = false;
 
             const respuestas = [
@@ -186,22 +185,18 @@
                     .trim();
             }
 
-            function getContextoPantalla() {
-                const section = document.querySelector('.nav-item.active')?.dataset.section || 'resumen';
-                const sede = document.getElementById('filtroSedeResumen')?.value || document.getElementById('sede')?.value || '';
-                const tipoBodega = document.getElementById('filtroTipoBodegaResumen')?.value || '';
-                const codigo = document.getElementById('codigoArticulo')?.value || '';
-                const codigoBarra = document.getElementById('codigoBarra')?.value || '';
-                return { section, sede, tipoBodega, codigo, codigoBarra };
-            }
-
             function getFallbackResponse(question) {
                 const clean = normalizeText(question);
 
+                let best = null, bestScore = 0;
                 for (const item of respuestas) {
-                    const ok = item.keywords.some(keyword => clean.includes(normalizeText(keyword)));
-                    if (ok) return item.answer;
+                    const score = item.keywords.reduce((sum, keyword) => {
+                        const phrase = normalizeText(keyword);
+                        return sum + (clean.includes(phrase) ? phrase.split(/\s+/).length + (phrase.length / 100) : 0);
+                    }, 0);
+                    if (score > bestScore) { best = item; bestScore = score; }
                 }
+                if (best) return best.answer;
 
                 return `No encontré una respuesta exacta para eso.
 
@@ -214,41 +209,12 @@
 					- uso del escáner
 					- justificaciones
 
-				Si luego conectas la función Edge "${AI_FUNCTION_NAME}", este panel puede responder con contexto real del sistema.`;
+				Esta ayuda utiliza respuestas predeterminadas; la función de IA aún no está configurada.`;
             }
 
             async function getAssistantResponse(question) {
-                if (!window.supabase?.functions?.invoke) {
-                    return getFallbackResponse(question);
-                }
-
-                try {
-                    const payload = {
-                        question: String(question || '').trim(),
-                        context: getContextoPantalla(),
-                        user: {
-                            username: window.currentUser?.username || window.currentUser?.usuario || '',
-                            role: window.currentUser?.role || window.currentUser?.rol || '',
-                            sede: window.currentUser?.sede || window.currentUser?.Sede || ''
-                        }
-                    };
-
-                    const { data, error } = await window.supabase.functions.invoke(AI_FUNCTION_NAME, {
-                        body: payload
-                    });
-
-                    if (error) throw error;
-
-                    const text = data?.answer || data?.respuesta || data?.message || '';
-                    if (text && String(text).trim()) {
-                        return String(text).trim();
-                    }
-
-                    return getFallbackResponse(question);
-                } catch (err) {
-                    console.warn('Asistente IA no disponible, usando fallback local:', err);
-                    return getFallbackResponse(question);
-                }
+                // La ayuda local funciona aunque el servicio de IA no esté configurado.
+                return getFallbackResponse(question);
             }
 
             async function processAssistantQuestion(question) {
@@ -323,18 +289,18 @@
 	
     <style>
         :root {
-            --coffee-dark: #3e2723;
-            --coffee-medium: #6f4e37;
-            --coffee-light: #d7ccc8;
-            --coffee-cream: #f5f1ea;
-            --coffee-accent: #c7a17a;
+            --coffee-dark: #102b51;
+            --coffee-medium: #2463dc;
+            --coffee-light: #e1e8f0;
+            --coffee-cream: #f3f6fa;
+            --coffee-accent: #2463dc;
 
-            --primary-gradient: linear-gradient(135deg, #6f4e37 0%, #3e2723 100%);
+            --primary-gradient: linear-gradient(135deg, #2463dc 0%, #174cb2 100%);
             --sidebar-width: 230px;
         }
         
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background: var(--coffee-cream);
             min-height: 100vh;
             color: #2d2d2d;
@@ -343,7 +309,7 @@
         
         .sidebar {
     		width: var(--sidebar-width);
-    		background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
+    		background: linear-gradient(170deg, #102b51, #0c203e);
     		box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
     		transition: all 0.3s ease;
     		padding-bottom: 0;
@@ -977,6 +943,29 @@
 		    cursor: pointer;
 		}
 
+
+        /* Apariencia compartida con Devoluciones. */
+        body { background:#f3f6fa; color:#182b43; }
+        .sidebar { width:235px; background:linear-gradient(170deg,#102b51,#0c203e); box-shadow:none; overflow-y:auto; }
+        .main-content { margin-left:235px; width:calc(100% - 235px); }
+        .inventory-brand { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+        .inventory-brand img { width:132px; height:auto; object-fit:contain; }
+        .inventory-brand span { color:#fff; font-size:10px; font-weight:600; letter-spacing:2px; }
+        .intranet-return { color:#aebed3; font-size:12px; text-decoration:none; margin-top:10px; }
+        .intranet-return:hover { color:#fff; }
+        .nav-item { color:#aebed3; border-radius:8px; }
+        .nav-item:hover { background:#2878eb20; color:#fff; }
+        .nav-item.active { background:#2878eb28; color:#a9ceff; box-shadow:inset 3px 0 #5da1ff; }
+        .card { border:1px solid #e1e8f0; border-radius:11px; box-shadow:0 5px 24px #142e5006; }
+        .input-field { border-color:#dce4ee; color:#182b43; }
+        .input-field:focus { border-color:#5692e9; box-shadow:0 0 0 3px #2463dc16; }
+        .table-row:hover { background:#f3f6fa; }
+        .assistant-body { background:#f3f6fa; }
+        .assistant-message.user { background:#2463dc; }
+        .assistant-chip { color:#425775; }
+        .assistant-chip:hover { background:#edf3fb; border-color:#b7d2ed; }
+        .assistant-empty-note { color:#708096; }
+        @media (max-width:768px) { .main-content { margin-left:0; width:100%; } }
 </style>
 </head>
 	
@@ -985,13 +974,10 @@
 	<div class="sidebar fixed top-0 left-0 h-full text-white">
     <div class="p-6">
         <div class="flex items-center justify-between mb-8">
-            <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-2">
-                    <img src="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/Inventario.png" 
-                         class="w-full h-full" 
-                         alt="logo">
-                </div>
-                <h1 class="text-xl font-bold text-center">Control de Inventarios</h1>
+            <div class="inventory-brand">
+                <img src="https://biahonduras.github.io/contenedores/brand/bia-honduras-logo.png" alt="BIA Honduras" width="132" height="48">
+                <span>INVENTARIOS</span>
+                <a href="/intranet/intranet.html" class="intranet-return">← Intranet BIA Honduras</a>
             </div>
             <button id="closeSidebar" class="lg:hidden text-white/70 hover:text-white">
                 <i class="fas fa-times text-xl"></i>
@@ -1039,10 +1025,6 @@
 				<a href="#depuracion" class="nav-item" data-section="depuracion">
                     <i class="fas fa-database"></i>
                     Depuración
-                </a>
-                <a href="../control-tiempos/intranet.html" class="nav-item" id="usuarios-intranet">
-                    <i class="fas fa-users-cog"></i>
-                    Gestión de Usuarios
                 </a>
             </nav>
         </div>
@@ -2105,129 +2087,6 @@
     </div>
 </section>
 			
- <!-- Gestión de Usuarios Section -->
-            <section id="usuarios-section" class="section-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6">Gestión de Usuarios</h3>
-                        
-                        <div class="overflow-x-auto mb-6">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Usuario</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Nombre Corto</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Rol</th>
-                                        <th class="pb-3 text-left text-sm font-medium text-gray-600">Sede</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTableBody">
-                                    <tr>
-                                        <td colspan="4" class="py-8 text-center text-gray-500">
-                                            <i class="fas fa-users text-3xl mb-2"></i>
-                                            <p>Cargando usuarios...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="card p-6">
-                        <h3 class="text-lg font-semibold mb-6" id="userFormTitle">Crear Nuevo Usuario</h3>
-                        
-                        <form id="userForm" class="space-y-4">
-                            <input type="hidden" id="userId">
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Usuario *</label>
-                                <input type="text" id="userUsername"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="nombre.usuario"
-							       autocomplete="username"
-							       required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Corto *</label>
-                                <input type="text" id="userNombre_corto" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: Juan"
-                                    required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="userEmail"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="usuario@empresa.com"
-							       autocomplete="email"
-							       required>
-                            </div>
-
-							<div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">DNI *</label>
-                                <input type="text" id="userDNI" 
-                                    class="input-field w-full px-4 py-3 rounded-lg" 
-                                    placeholder="Ej: 0501199001234"
-                                    required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
-                                <input type="password" id="userPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
-                                <input type="password" id="userConfirmPassword"
-							       class="input-field w-full px-4 py-3 rounded-lg"
-							       placeholder="••••••••"
-							       autocomplete="new-password"
-							       required>
-                            </div>
-
-							<div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Sede *</label>
-                                <select id="userSite" class="input-field w-full px-4 py-3 rounded-lg">
-                                    <option value="Amarateca">Amarateca</option>
-                                    <option value="La Ceiba">La Ceiba</option>
-									<option value="San Pedro Sula">San Pedro Sula</option>
-									<option value="Santa Rosa de Copan">Santa Rosa de Copan</option>
-									<option value="Tegucigalpa">Tegucigalpa</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                                <select id="userRole" class="input-field w-full px-4 py-3 rounded-lg">
-                                    <option value="usuario">Usuario</option>
-                                    <option value="admin">Administrador</option>
-									<option value="superadmin">SuperAdministrador</option>
-                                </select>
-                            </div>
-                            
-                            <div class="flex space-x-4 pt-4">
-                                <button type="reset" class="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                                    Cancelar
-                                </button>
-                                <button type="submit" class="btn-primary flex-1 py-3 rounded-lg text-white">
-                                    <i class="fas fa-save mr-2"></i>
-                                    Guardar Usuario
-                                </button>
-								<button type="button" id="btnNuevoUsuario" class="btn-primary flex-1 py-3 rounded-lg text-white">
-								    <i class="fas fa-user-plus mr-2"></i>
-								    Nuevo Usuario
-								</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 
@@ -2305,24 +2164,6 @@
             tipoBodega: 'Todas'
         };
 
-        const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
-
-        function obtenerUsuarioActualNormalizado(user = currentUser) {
-            return String(
-                user?.username ||
-                user?.usuario ||
-                user?.user_username ||
-                user?.email ||
-                ''
-            ).trim().toLowerCase();
-        }
-
-        function usuarioPuedeGestionarUsuarios(user = currentUser) { return user?.can_users === true; }
-        function aplicarRestriccionGestionUsuarios() {
-            const nav = document.getElementById('usuarios-intranet');
-            if (nav) nav.style.display = usuarioPuedeGestionarUsuarios() ? '' : 'none';
-        }
-
         function usuarioPuedeGestionarVencimientos(user = currentUser) {
             return esAdmin(user);
         }
@@ -2340,14 +2181,6 @@
             modal?.remove();
         }
 
-        function formatearDNI(valor = '') {
-            const digits = String(valor).replace(/\D/g, '').slice(0, 13);
-            const parts = [];
-            if (digits.length > 0) parts.push(digits.slice(0, 4));
-            if (digits.length > 4) parts.push(digits.slice(4, 8));
-            if (digits.length > 8) parts.push(digits.slice(8, 13));
-            return parts.join('-');
-        }
 
 		const bodegasPorSede = {
 			    "Amarateca": [
@@ -2818,9 +2651,7 @@
             cargarResumenCodigos();
 			cargarDiaEnSelector();
 			programarActualizacionVencimientos();
-			aplicarRestriccionGestionUsuarios();
             aplicarRestriccionCargaVencimientos();
-			loadVencimientosData();
 			
 			document.getElementById('btnEditarRegistros').addEventListener('click', () => {
     			activarModoEdicion();
@@ -2860,13 +2691,6 @@
 		            loadInventory();
 		        });
 		    }
-
-            const userDniInput = document.getElementById('userDNI');
-            if (userDniInput) {
-                userDniInput.addEventListener('input', function () {
-                    this.value = formatearDNI(this.value);
-                });
-            }
 
 			document.addEventListener('click', function(e) {
 			    const btn = e.target.closest('.btnEditarFila');
@@ -3126,10 +2950,6 @@
     				loadVencimientosData();
 				}
 
-				if (section === 'usuarios') {
-				    resetUserForm();
-				    loadUsers();
-				}
 
 			// Actualizar título
         	const titulo = this.textContent.trim();
@@ -5044,204 +4864,6 @@ function normalizarNombreColumnaCSV(nombre = '') {
             document.getElementById('notification').querySelector('.rounded-lg').className = 'bg-white rounded-lg shadow-lg p-4 max-w-sm';
         });
 
-        // ===== GESTIÓN DE USUARIOS =====
-
-			function bloquearFormularioUsuarios() {
-			    const form = document.getElementById('userForm');
-			    if (!form) return;
-
-			    form.querySelectorAll('input, select, button').forEach(el => {
-			        if (el.id === 'userId') return;
-			        el.disabled = true;
-			        el.readOnly = true;
-			        if (el.classList.contains('input-field')) {
-			            el.classList.add('input-disabled');
-			        }
-			    });
-			}
-
-			function resetUserForm() {
-			    const form = document.getElementById('userForm');
-			    if (!form) return;
-			
-			    form.reset();
-			    document.getElementById('userId').value = '';
-			    document.getElementById('userFormTitle').textContent = 'Crear Nuevo Usuario';
-			
-			    const campos = [
-			        'userUsername',
-			        'userNombre_corto',
-			        'userEmail',
-			        'userDNI',
-			        'userPassword',
-			        'userConfirmPassword',
-			        'userRole'
-			    ];
-			
-			    if (!usuarioPuedeGestionarUsuarios()) {
-			        bloquearFormularioUsuarios();
-			        return;
-			    }
-			
-			    campos.forEach(id => {
-			        const el = document.getElementById(id);
-			        if (!el) return;
-			        el.disabled = false;
-			        el.readOnly = false;
-			        el.classList.remove('input-disabled');
-			    });
-			
-			    const botones = form.querySelectorAll('button');
-			    botones.forEach(btn => btn.disabled = false);
-			}
-		
-	        function initUsers() {
-			    const form = document.getElementById('userForm');
-			    			    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
-			    			    const tbody = document.getElementById('usersTableBody');
-			
-			    tbody.addEventListener('click', async (e) => {
-			        const btnDelete = e.target.closest('.btn-delete-user');
-			        if (btnDelete) {
-			            await deleteUser(btnDelete.dataset.username);
-			            return;
-			        }
-			
-			        const btnEdit = e.target.closest('.btn-edit-user');
-			        if (btnEdit) {
-			            editUser(
-			                btnEdit.dataset.username,
-			                btnEdit.dataset.nombre,
-			                btnEdit.dataset.correo,
-			                btnEdit.dataset.rol
-			            );
-			        }
-			    });
-			
-			    form.addEventListener('submit', async function (e) {
-				    e.preventDefault();
-				
-				    if (!usuarioPuedeGestionarUsuarios()) {
-			        showNotification('Error', 'No tienes permisos para crear usuarios', 'error');
-			        return;
-			    }
-
-			    const usuario = document.getElementById('userUsername').value.trim().toLowerCase();
-				    const nombre_corto = document.getElementById('userNombre_corto').value.trim();
-				    const correo = document.getElementById('userEmail').value.trim().toLowerCase();
-				    const dni = document.getElementById('userDNI').value.trim();
-				    const password = document.getElementById('userPassword').value;
-				    const confirmPassword = document.getElementById('userConfirmPassword').value;
-				    const rol = document.getElementById('userRole').value;
-				
-				    if (!usuario || !nombre_corto || !correo || !dni || !password || !confirmPassword || !sede) {
-				        showNotification('Error', 'Complete todos los campos requeridos', 'error');
-				        return;
-				    }
-				
-				    if (password !== confirmPassword) {
-				        showNotification('Error', 'Las contraseñas no coinciden', 'error');
-				        return;
-				    }
-				
-				    try {
-				        await llamarFuncionSegura({
-						  usuario,
-						  nombre_corto,
-						  correo,
-						  dni,
-						  password,
-						  rol
-						});
-										
-				        showNotification('Éxito', 'Usuario creado correctamente', 'success');
-				        resetUserForm();
-				        await loadUsers();
-				    } catch (error) {
-				        console.error(error);
-				        showNotification('Error', error.message || 'No se pudo crear el usuario', 'error');
-				    }
-				});
-
-				form.querySelector('button[type="reset"]').addEventListener('click', resetUserForm);
-			    btnNuevoUsuario.addEventListener('click', resetUserForm);
-			
-			    resetUserForm();
-			    loadUsers();
-			}
-        
-        async function loadUsers() {
-		    const tbody = document.getElementById('usersTableBody');
-		    if (!tbody) return;
-		
-		    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-		
-		    if (!currentUser) {
-		        window.location.href = 'index.html';
-		        return;
-		    }
-		
-		    if (!usuarioPuedeGestionarUsuarios(currentUser)) {
-		        tbody.innerHTML = `
-		            <tr>
-		                <td colspan="6" class="py-8 text-center text-gray-500">
-		                    <i class="fas fa-lock text-3xl mb-2"></i>
-		                    <p>No tienes permisos para ver este módulo</p>
-		                </td>
-		            </tr>
-		        `;
-		        return;
-		    }
-		
-		    tbody.innerHTML = `
-		        <tr>
-		            <td colspan="6" class="py-8 text-center text-gray-500">
-		                <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-		                <p>Cargando usuarios...</p>
-		            </td>
-		        </tr>
-		    `;
-		
-		    try {
-		        const { data, error } = await supabase.rpc('listar_usuarios');
-		
-		        if (error) throw error;
-		
-		        if (!data || data.length === 0) {
-		            tbody.innerHTML = `
-		                <tr>
-		                    <td colspan="6" class="py-8 text-center text-gray-500">
-		                        <i class="fas fa-users-slash text-3xl mb-2"></i>
-		                        <p>No hay usuarios registrados</p>
-		                    </td>
-		                </tr>
-		            `;
-		            return;
-		        }
-		
-		        tbody.innerHTML = data.map(user => `
-		            <tr class="border-b border-gray-200 hover:bg-gray-50">
-		                <td class="px-4 py-3">${escapeHtml(user.usuario || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.nombre_corto || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.rol || '')}</td>
-		                <td class="px-4 py-3">${escapeHtml(user.sede || '')}</td>
-		            </tr>
-		        `).join('');
-		    } catch (err) {
-		        console.error(err);
-		
-		        tbody.innerHTML = `
-		            <tr>
-		                <td colspan="6" class="py-8 text-center text-red-500">
-		                    <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
-		                    <p>${escapeHtml(err.message || 'Error al cargar usuarios')}</p>
-		                </td>
-		            </tr>
-		        `;
-		    }
-		}
-		
-		
         function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -5530,23 +5152,7 @@ tbody.innerHTML = data.map(item => {
 		    loadVencimientosData();
 		}
 		
-    async function crearUsuario(username, nombre_corto, email, password, rol) {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .insert([{
-            usuario: username,
-            nombre_corto: nombre_corto, // 🔴 ESTA LÍNEA ES LA CLAVE
-            email: email,
-            contraseña: password,
-            rol: rol
-        }]);
 
-    if (error) {
-        return { success: false, error };
-    }
-
-    return { success: true, data };
-}
 	function normalizarCodigo(codigo) {
    		return String(codigo || '').trim();
 		}
@@ -6574,7 +6180,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 
         <div id="assistantBody" class="assistant-body">
             <div class="assistant-message bot">
-                Hola. Puedo ayudarte con consultas del sistema y, si conectas la función Edge, responder con contexto real.
+                Hola. Puedo orientarte con instrucciones sobre el sistema. Esta ayuda usa respuestas predeterminadas.
             </div>
 
             <div class="assistant-message bot">
@@ -6584,7 +6190,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
                     <button class="assistant-chip" type="button" data-question="¿Cómo importar códigos?">Importar códigos</button>
                     <button class="assistant-chip" type="button" data-question="¿Qué significa la diferencia DIF?">Qué es DIF</button>
                     <button class="assistant-chip" type="button" data-question="¿Cómo usar el escáner?">Usar escáner</button>
-                    <button class="assistant-chip" type="button" data-question="¿Cómo exportar a CSV?">Exportación Informe</button>
+                    <button class="assistant-chip" type="button" data-question="¿Cómo exportar a XLSX?">Exportación Informe</button>
                     <button class="assistant-chip" type="button" data-question="¿Qué formato debe tener el archivo de inventario?">Formato inventario</button>
                 </div>
             </div>
@@ -6885,4 +6491,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 

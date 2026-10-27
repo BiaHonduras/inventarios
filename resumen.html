@@ -24,10 +24,10 @@
 
     <style>
         :root {
-            --bg-main: #f5f1eb;
-            --coffee-dark: #3e2723;
-            --coffee-medium: #6f4e37;
-            --coffee-accent: #c7a17a;
+            --bg-main: #f3f6fa;
+            --coffee-dark: #102b51;
+            --coffee-medium: #2463dc;
+            --coffee-accent: #5da1ff;
         }
 
         body {
@@ -45,8 +45,8 @@
         }
 
         .sidebar {
-            background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
-            color: #f5f1eb;
+            background: linear-gradient(180deg, #102b51 0%, #0c203e 100%);
+            color: #f3f6fa;
             padding: 20px;
             display: flex;
             flex-direction: column;
@@ -103,7 +103,7 @@
 
         .filter-btn.active {
             background: var(--coffee-accent);
-            color: #2b1b17;
+            color: #0c203e;
             font-weight: 600;
             border-color: transparent;
             box-shadow: 0 8px 18px rgba(199, 161, 122, 0.25);
@@ -120,7 +120,7 @@
         }
 
         .filter-btn.active::after {
-            background: #2b1b17;
+            background: #0c203e;
         }
 
         .main {
@@ -152,12 +152,12 @@
         .card p {
             margin: 0 0 8px 0;
             font-size: 13px;
-            color: #6f4e37;
+            color: #2463dc;
         }
 
         .card h2 {
             margin: 0;
-            color: #3e2723;
+            color: #102b51;
         }
 
         .chart-large {
@@ -190,7 +190,7 @@
             width: 100%;
             padding: 15px;
             padding-bottom: 50px;
-            border-left: 2px solid #e5ddd5;
+            border-left: 2px solid #e1e8f0;
         }
 
         .right h3,
@@ -204,7 +204,7 @@
             max-height: 310px;
             overflow-y: auto;
             border-radius: 10px;
-            border: 1px solid #d6ccc2;
+            border: 1px solid #dce4ee;
             background: rgba(255,255,255,0.35);
         }
 
@@ -217,7 +217,7 @@
         .table th,
         .table td {
             padding: 7px;
-            border-bottom: 1px solid #d6ccc2;
+            border-bottom: 1px solid #dce4ee;
             text-align: left;
             vertical-align: top;
         }
@@ -225,7 +225,7 @@
         .table th {
             position: sticky;
             top: 0;
-            background: #efe6dc;
+            background: #edf3fb;
             color: var(--coffee-dark);
             z-index: 1;
         }
@@ -271,7 +271,7 @@
             .right {
                 grid-column: 1 / -1;
                 border-left: none;
-                border-top: 2px solid #e5ddd5;
+                border-top: 2px solid #e1e8f0;
             }
         }
 
@@ -605,13 +605,13 @@
                         label: 'Unidades por Proveedor',
                         data,
                         backgroundColor: [
-                            '#3e2723',
-                            '#6f4e37',
-                            '#8b5e3c',
-                            '#a67c52',
-                            '#c7a17a'
+                            '#102b51',
+                            '#2463dc',
+                            '#37a59b',
+                            '#9b80d2',
+                            '#5da1ff'
                         ],
-                        borderColor: '#3e2723',
+                        borderColor: '#102b51',
                         borderWidth: 1,
                         borderRadius: 6
                     }]
@@ -628,7 +628,7 @@
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                color: '#3e2723'
+                                color: '#102b51'
                             },
                             grid: {
                                 color: 'rgba(111, 78, 55, 0.1)'
@@ -636,7 +636,7 @@
                         },
                         x: {
                             ticks: {
-                                color: '#3e2723'
+                                color: '#102b51'
                             },
                             grid: {
                                 display: false
@@ -739,7 +739,7 @@
                     datasets: [{
                         label: 'Sobrantes',
                         data: valores,
-                        backgroundColor: '#6f4e37',
+                        backgroundColor: '#2463dc',
                         borderRadius: 6,
                         barThickness: 18,
                         maxBarThickness: 22
@@ -852,7 +852,7 @@
 
             if (error) {
                 console.error('Error cargando top SKUs desde vista:', error);
-                renderTopChart('topHigh', [], 'Más inventario', '#6f4e37');
+                renderTopChart('topHigh', [], 'Más inventario', '#2463dc');
                 renderTopChart('topLow', [], 'Menos inventario', '#c0392b');
                 return;
             }
@@ -870,7 +870,7 @@
                 .sort((a, b) => a.total - b.total)
                 .slice(0, 5);
 
-            renderTopChart('topHigh', topHigh, 'Más inventario', '#6f4e37');
+            renderTopChart('topHigh', topHigh, 'Más inventario', '#2463dc');
             renderTopChart('topLow', topLow, 'Menos inventario', '#c0392b');
         }
 
@@ -976,4 +976,5 @@
     </script>
 </body>
 </html>
+
 

@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Inventarios Diarios</title>
+
+    <link rel="icon" href="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script type="module">
+        import { supabase, verificarConexion } from './supabase-config.js';
+        window.supabase = supabase;
+        window.verificarConexion = verificarConexion;
+    </script>
+
+    <style>
+        :root {
+            --bg-main: #f5f1eb;
+            --coffee-dark: #3e2723;
+            --coffee-medium: #6f4e37;
+            --coffee-accent: #c7a17a;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-main);
+            color: #2b2b2b;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr 340px;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #3e2723 0%, #2b1b17 100%);
+            color: #f5f1eb;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar h3 {
+            margin-top: 20px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            margin-bottom: 10px;
+            font-size: 13px;
+            background: var(--coffee-medium);
+            color: #fff;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .filter-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(199, 161, 122, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-btn:hover {
+            background: rgba(199, 161, 122, 0.2);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .filter-btn.active {
+            background: var(--coffee-accent);
+            color: #2b1b17;
+            font-weight: 600;
+            border-color: transparent;
+            box-shadow: 0 8px 18px rgba(199, 161, 122, 0.25);
+        }
+
+        .filter-btn::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.22);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .filter-btn.active::after {
+            background: #2b1b17;
+        }
+
+        .main {
+            padding: 15px;
+            padding-bottom: 50px;
+        }
+
+        .header {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--coffee-dark);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-main);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(62, 39, 35, 0.08);
+            border: 1px solid rgba(111, 78, 55, 0.1);
+        }
+
+        .card p {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #6f4e37;
+        }
+
+        .card h2 {
+            margin: 0;
+            color: #3e2723;
+        }
+
+        .chart-large {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.35);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-row > div,
+        .chart-block {
+            background: rgba(255,255,255,0.35);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        canvas {
+            background: transparent !important;
+        }
+
+        .right {
+            background: var(--bg-main);
+            width: 100%;
+            padding: 15px;
+            padding-bottom: 50px;
+            border-left: 2px solid #e5ddd5;
+        }
+
+        .right h3,
+        .right h4,
+        .chart-row h4 {
+            color: var(--coffee-dark);
+            margin-top: 0;
+        }
+
+        .table-wrap {
+            max-height: 310px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #d6ccc2;
+            background: rgba(255,255,255,0.35);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .table th,
+        .table td {
+            padding: 7px;
+            border-bottom: 1px solid #d6ccc2;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .table th {
+            position: sticky;
+            top: 0;
+            background: #efe6dc;
+            color: var(--coffee-dark);
+            z-index: 1;
+        }
+
+        .table td:nth-child(2),
+        .table td:nth-child(3) {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .chart-block {
+            margin-top: 18px;
+        }
+
+        #proveedoresChart {
+            height: 300px !important;
+        }
+
+        #sobrantesChart,
+        #faltantesChart {
+            width: 100% !important;
+            height: 220px !important;
+        }
+
+        #topHigh,
+        #topLow {
+            width: 100% !important;
+            height: 260px !important;
+        }
+
+        #nombreCorto {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 220px 1fr;
+            }
+
+            .right {
+                grid-column: 1 / -1;
+                border-left: none;
+                border-top: 2px solid #e5ddd5;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .cards,
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div>
+                <h3>SEDE</h3>
+                <select class="select" id="sede-filtro">
+                    <option value="">Todas</option>
+                    <option value="Amarateca">Amarateca</option>
+                    <option value="La Ceiba">La Ceiba</option>
+                    <option value="San Pedro Sula">San Pedro Sula</option>
+                    <option value="Santa Rosa de Copán">Santa Rosa de Copán</option>
+                    <option value="Tegucigalpa">Tegucigalpa</option>
+                </select>
+
+                <h3>BODEGAS</h3>
+                <div class="filter-group" id="bodegas-filtro">
+                    <button type="button" class="filter-btn" data-value="030">Bodega Principal</button>
+                    <button type="button" class="filter-btn" data-value="PPV">Bodega PPV</button>
+                    <button type="button" class="filter-btn" data-value="PFN">Bodega PFN</button>
+                </div>
+
+                <h3>PROVEEDORES</h3>
+                <div class="filter-group" id="proveedores-filtro">
+                    <button type="button" class="filter-btn" data-value="Best">Best</button>
+                    <button type="button" class="filter-btn" data-value="Farahon">Farahon</button>
+                    <button type="button" class="filter-btn" data-value="GKSA">GKSA</button>
+                    <button type="button" class="filter-btn" data-value="Guandy">Guandy</button>
+                    <button type="button" class="filter-btn" data-value="MCM">MCM</button>
+                    <button type="button" class="filter-btn" data-value="Molsa">Molsa</button>
+                    <button type="button" class="filter-btn" data-value="Nutresa">Nutresa</button>
+                    <button type="button" class="filter-btn" data-value="San Marcos">San Marcos</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="header">Dashboard Resumen Inventarios Diarios</div>
+
+            <div class="cards">
+                <div class="card">
+                    <p>SKU´s</p>
+                    <h2 id="total-skus">0</h2>
+                </div>
+
+                <div class="card">
+                    <p>Valor Inventario</p>
+                    <h2 id="valor-inventario">L. 0.00</h2>
+                </div>
+
+                <div class="card">
+                    <p>Valor Diferencias</p>
+                    <h2 id="valor-diferencias">L. 0.00</h2>
+                </div>
+            </div>
+
+            <div class="chart-large">
+                <canvas id="proveedoresChart"></canvas>
+            </div>
+
+            <div class="chart-row">
+                <div>
+                    <h4>Top 5 SKU´s con más inventario</h4>
+                    <canvas id="topHigh"></canvas>
+                </div>
+
+                <div>
+                    <h4>Top 5 SKU´s con menos inventario</h4>
+                    <canvas id="topLow"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="right">
+            <h3>Diferencias</h3>
+
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Dif.</th>
+                            <th>Costo</th>
+                            <th>Justificación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-diferencias"></tbody>
+                </table>
+            </div>
+
+            <div class="chart-block">
+                <h4>Sobrantes</h4>
+                <canvas id="sobrantesChart"></canvas>
+            </div>
+
+            <div class="chart-block">
+                <h4>Faltantes</h4>
+                <canvas id="faltantesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
+        <div class="text-[11px] text-gray-500">
+            Elaborado por Hernán Manuel Pérez Banegas®
+        </div>
+
+        <div class="flex items-center gap-2 text-xs whitespace-nowrap">
+            <span id="nombreCorto" class="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"></span>
+            <button onclick="window.location.href='dashboard.html'" class="ml-2">
+                <i class="fas fa-home"></i>
+            </button>
+            <button id="logoutBtn" class="ml-2">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let proveedoresChartInstance = null;
+        let sobrantesChartInstance = null;
+        let faltantesChartInstance = null;
+        let topHighChartInstance = null;
+        let topLowChartInstance = null;
+
+        function formatearMoneda(valor) {
+            const numero = Number(valor || 0);
+
+            return numero < 0
+                ? `- L. ${Math.abs(numero).toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`
+                : `L. ${numero.toLocaleString('es-HN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+        }
+
+        function formatearNumero(valor) {
+            const numero = Number(valor || 0);
+
+            return numero.toLocaleString('es-HN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatearMonedaCompacta(valor) {
+            const numero = Number(valor || 0);
+            const abs = Math.abs(numero);
+
+            let valorCompacto = numero;
+            let sufijo = '';
+
+            if (abs >= 1000000000) {
+                valorCompacto = numero / 1000000000;
+                sufijo = 'B';
+            } else if (abs >= 1000000) {
+                valorCompacto = numero / 1000000;
+                sufijo = 'M';
+            } else if (abs >= 1000) {
+                valorCompacto = numero / 1000;
+                sufijo = 'K';
+            }
+
+            return numero < 0
+                ? `- L. ${Math.abs(valorCompacto).toLocaleString('es-HN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1
+                })}${sufijo}`
+                : `L. ${valorCompacto.toLocaleString('es-HN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1
+                })}${sufijo}`;
+        }
+
+        function obtenerFiltrosActivos() {
+            const sede = document.getElementById('sede-filtro')?.value || '';
+
+            const bodegas = Array.from(
+                document.querySelectorAll('#bodegas-filtro .filter-btn.active')
+            ).map(btn => btn.dataset.value);
+
+            const proveedores = Array.from(
+                document.querySelectorAll('#proveedores-filtro .filter-btn.active')
+            ).map(btn => btn.dataset.value);
+
+            return { sede, bodegas, proveedores };
+        }
+
+        function construirQueryProveedorVista() {
+            const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+
+            let query = supabase
+                .from('vw_dashboard_proveedores')
+                .select('*');
+
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
+
+            return query;
+        }
+
+        function construirQueryTopVista() {
+            const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+
+            let query = supabase
+                .from('vw_top_skus_inventario_redondeado')
+                .select('*');
+
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('id_bodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
+
+            return query;
+        }
+
+        function construirQueryDiferenciasVista() {
+            const { sede, bodegas, proveedores } = obtenerFiltrosActivos();
+
+            let query = supabase
+                .from('inventario_justificaciones')
+                .select('*');
+
+            if (sede) query = query.eq('sede', sede);
+            if (bodegas.length > 0) query = query.in('idBodega', bodegas);
+            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
+
+            console.log('Bodegas: ', bodegas);
+            console.log('Proveedores: ', proveedores);
+
+            return query;
+        }
+
+        async function cargarTotalSKUs() {
+            const { data, error } = await construirQueryTopVista();
+
+            if (error) {
+                console.error('Error cargando SKU desde vista:', error);
+                document.getElementById('total-skus').textContent = '0';
+                return;
+            }
+
+            const unicos = new Set((data || []).map(item => item.codigo).filter(Boolean));
+            document.getElementById('total-skus').textContent = unicos.size;
+        }
+
+        async function cargarValorInventario() {
+            const { data, error } = await construirQueryTopVista();
+
+            if (error) {
+                console.error('Error cargando valor inventario desde vista:', error);
+                document.getElementById('valor-inventario').textContent = 'L. 0.00';
+                return;
+            }
+
+            const total = (data || []).reduce((acc, item) => {
+                return acc + Number(item.valor_inventario || 0);
+            }, 0);
+
+            document.getElementById('valor-inventario').textContent = formatearMoneda(total);
+        }
+
+        async function cargarValorDiferencias() {
+            const { data, error } = await construirQueryDiferenciasVista();
+
+            if (error) {
+                console.error('Error cargando valor diferencias desde vista:', error);
+                document.getElementById('valor-diferencias').textContent = 'L. 0.00';
+                return;
+            }
+
+            const total = (data || []).reduce((acc, item) => {
+                return acc + Number(item.costo_sf || 0);
+            }, 0);
+
+            document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
+        }
+
+        async function cargarUnidadesPorProveedor() {
+            const { data, error } = await construirQueryProveedorVista();
+
+            if (error) {
+                console.error('Error cargando unidades por proveedor desde vista:', error);
+                renderChartProveedores([], []);
+                return;
+            }
+
+            const agrupado = {};
+
+            (data || []).forEach(item => {
+                const proveedor = item.proveedor || 'Sin proveedor';
+                agrupado[proveedor] = (agrupado[proveedor] || 0) + Number(item.total_unidades || 0);
+            });
+
+            renderChartProveedores(Object.keys(agrupado), Object.values(agrupado));
+        }
+
+        function renderChartProveedores(labels, data) {
+            const canvas = document.getElementById('proveedoresChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            if (proveedoresChartInstance) {
+                proveedoresChartInstance.destroy();
+            }
+
+            proveedoresChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Unidades por Proveedor',
+                        data,
+                        backgroundColor: [
+                            '#3e2723',
+                            '#6f4e37',
+                            '#8b5e3c',
+                            '#a67c52',
+                            '#c7a17a'
+                        ],
+                        borderColor: '#3e2723',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#3e2723'
+                            },
+                            grid: {
+                                color: 'rgba(111, 78, 55, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#3e2723'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function cargarDiferencias() {
+            const { data, error } = await construirQueryDiferenciasVista();
+
+            if (error) {
+                console.error('Error cargando diferencias desde vista:', error);
+                renderTablaDiferencias([]);
+                renderGraficoSobrantes([]);
+                renderGraficoFaltantes([]);
+                return;
+            }
+
+            const normalizado = (data || []).map(item => {
+                const diferencia = Number(item.diferencia_sf || 0);
+                const costo = Number(item.costo_sf || 0);
+
+                return {
+                    codigo: item.codigo || '',
+                    diferencia_sf: diferencia,
+                    costo_sf: costo,
+                    justificacion_final: item.justificacion_final || '',
+                    tipo: diferencia > 0 ? 'Sobrante' : diferencia < 0 ? 'Faltante' : 'Sin diferencia'
+                };
+            }).filter(item => item.diferencia_sf !== 0 || item.costo_sf !== 0);
+
+            const tabla = [...normalizado].sort((a, b) => {
+                return Math.abs(b.costo_sf) - Math.abs(a.costo_sf);
+            });
+
+            const sobrantes = normalizado
+                .filter(item => item.diferencia_sf > 0)
+                .sort((a, b) => Math.abs(b.costo_sf) - Math.abs(a.costo_sf))
+                .slice(0, 5);
+
+            const faltantes = normalizado
+                .filter(item => item.diferencia_sf < 0)
+                .sort((a, b) => Math.abs(b.costo_sf) - Math.abs(a.costo_sf))
+                .slice(0, 5);
+
+            renderTablaDiferencias(tabla);
+            renderGraficoSobrantes(sobrantes);
+            renderGraficoFaltantes(faltantes);
+        }
+
+        function renderTablaDiferencias(data) {
+            const tbody = document.getElementById('tabla-diferencias');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align:center;">Sin datos</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(item => {
+                const fila = document.createElement('tr');
+
+                fila.innerHTML = `
+                    <td>${item.codigo}</td>
+                    <td>${formatearNumero(item.diferencia_sf)}</td>
+                    <td>${formatearMoneda(item.costo_sf)}</td>
+                    <td>${item.justificacion_final}</td>
+                `;
+
+                tbody.appendChild(fila);
+            });
+        }
+
+        function renderGraficoSobrantes(data) {
+            const canvas = document.getElementById('sobrantesChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => Math.abs(Number(item.costo_sf || 0)));
+
+            if (sobrantesChartInstance) {
+                sobrantesChartInstance.destroy();
+            }
+
+            sobrantesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Sobrantes',
+                        data: valores,
+                        backgroundColor: '#6f4e37',
+                        borderRadius: 6,
+                        barThickness: 18,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatearMoneda(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatearMonedaCompacta(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(111, 78, 55, 0.08)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGraficoFaltantes(data) {
+            const canvas = document.getElementById('faltantesChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => Math.abs(Number(item.costo_sf || 0)));
+
+            if (faltantesChartInstance) {
+                faltantesChartInstance.destroy();
+            }
+
+            faltantesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Faltantes',
+                        data: valores,
+                        backgroundColor: '#c0392b',
+                        borderRadius: 6,
+                        barThickness: 18,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatearMoneda(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatearMonedaCompacta(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(192, 57, 43, 0.08)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function cargarTopSKUs() {
+            const { data, error } = await construirQueryTopVista();
+
+            if (error) {
+                console.error('Error cargando top SKUs desde vista:', error);
+                renderTopChart('topHigh', [], 'Más inventario', '#6f4e37');
+                renderTopChart('topLow', [], 'Menos inventario', '#c0392b');
+                return;
+            }
+
+            const procesado = (data || []).map(item => ({
+                codigo: item.codigo,
+                total: Number(item.total_unidades || 0)
+            })).filter(item => item.codigo);
+
+            const topHigh = [...procesado]
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+
+            const topLow = [...procesado]
+                .sort((a, b) => a.total - b.total)
+                .slice(0, 5);
+
+            renderTopChart('topHigh', topHigh, 'Más inventario', '#6f4e37');
+            renderTopChart('topLow', topLow, 'Menos inventario', '#c0392b');
+        }
+
+        function renderTopChart(canvasId, data, label, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            const labels = data.map(item => item.codigo);
+            const valores = data.map(item => item.total);
+
+            const chartInstance = canvasId === 'topHigh'
+                ? topHighChartInstance
+                : topLowChartInstance;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data: valores,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'topHigh') {
+                topHighChartInstance = newChart;
+            } else {
+                topLowChartInstance = newChart;
+            }
+        }
+
+        async function aplicarFiltrosDashboard() {
+            await Promise.all([
+                cargarTotalSKUs(),
+                cargarValorInventario(),
+                cargarValorDiferencias(),
+                cargarUnidadesPorProveedor(),
+                cargarDiferencias(),
+                cargarTopSKUs()
+            ]);
+        }
+
+        function configurarEventosFiltros() {
+            const sedeSelect = document.getElementById('sede-filtro');
+            const botonesFiltro = document.querySelectorAll('.filter-group .filter-btn');
+
+            if (sedeSelect) {
+                sedeSelect.addEventListener('change', aplicarFiltrosDashboard);
+            }
+
+            botonesFiltro.forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    this.classList.toggle('active');
+                    await aplicarFiltrosDashboard();
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            configurarEventosFiltros();
+            await aplicarFiltrosDashboard();
+
+            const nombreCorto = document.getElementById('nombreCorto');
+
+            if (nombreCorto && typeof currentUser !== 'undefined' && currentUser?.nombre_corto) {
+                nombreCorto.textContent = currentUser.nombre_corto;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Control de Inventarios Diarios</title>
+  <!-- Librería ligera y optimizada para escáner de códigos de barra/QR -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8;
+      --secondary: #64748b; --success: #16a34a; --danger: #dc2626; --warning: #ca8a04;
+      --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    header h3 { margin: 0; }
+    nav { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    nav a { text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+    nav a:hover { color: var(--primary); }
+    main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+    section { background: var(--card-bg); padding: 1.5rem; margin-bottom: 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow); }
+    h2, h3, h4 { margin-bottom: 0.75rem; color: var(--text); }
+    .grid { display: grid; gap: 1rem; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .card { background: var(--bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border); text-align: center; }
+    .card h4 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card p { font-size: 1.5rem; font-weight: 600; }
+    .form-group { margin-bottom: 0.75rem; }
+    label { display: block; margin-bottom: 0.25rem; font-weight: 500; font-size: 0.85rem; }
+    input, select, textarea { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.875rem; background: var(--card-bg); }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.875rem; transition: 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-secondary { background: var(--secondary); color: white; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--bg); }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
+    th, td { padding: 0.75rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { background: #f1f5f9; font-weight: 600; }
+    .scanner-container { position: relative; margin: 0.75rem 0; }
+    #reader { width: 100%; max-width: 350px; border-radius: 6px; overflow: hidden; display: none; border: 2px dashed var(--border); }
+    .checkbox-group { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; padding: 0.5rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; width: fit-content; }
+    .checkbox-group input { width: auto; }
+    .hidden { display: none !important; }
+    .flex { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .mt-2 { margin-top: 0.75rem; }
+    .mb-2 { margin-bottom: 0.75rem; }
+    .text-sm { font-size: 0.8rem; }
+    .text-muted { color: var(--text-muted); }
+    .text-center { text-align: center; }
+    footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; padding: 1.5rem; border-radius: var(--radius); max-width: 450px; width: 90%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    pre { background: #f1f5f9; padding: 0.75rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="flex">
+      <img src="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/Inventario.png" alt="Logo" height="36" style="object-fit: contain;">
+      <h3>Control de Inventarios</h3>
+    </div>
+    <nav>
+      <a href="#resumen">Resumen</a>
+      <a href="#vencimientos">Vencimientos</a>
+      <a href="#inventario-diario">Inventarios Diarios</a>
+      <a href="#inventario">Ver Inventario</a>
+      <a href="#transitos">Justificaciones</a>
+      <a href="#exportar">Exportación Informe</a>
+      <a href="#importar-inventario">Importar Inventarios</a>
+      <a href="#importar-codigos">Importar Códigos</a>
+      <a href="https://biahonduras.github.io/proyecto/resumen.html" target="_blank">Dashboard</a>
+      <a href="#usuarios">Gestión de Usuarios</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="resumen">
+      <h2>Resumen</h2>
+      <div class="grid grid-2 mb-2">
+        <div class="form-group"><label>Sede</label><select id="resumen-sede"><option>Todas las sedes</option><option>Amarateca</option><option>La Ceiba</option><option>San Pedro Sula</option><option>Santa Rosa de Copan</option><option>Tegucigalpa</option></select></div>
+        <div class="form-group"><label>Tipo de Bodega</label><select id="resumen-bodega"><option>Todas las bodegas</option><option>Principal</option><option>PPV</option><option>PFN</option></select></div>
+      </div>
+      <p class="text-muted mb-2">Vista activa: <span id="vista-activa">Todas las sedes, Todas las bodegas</span></p>
+      <div class="grid grid-4">
+        <div class="card"><h4>Total Artículos</h4><p id="total-articulos">0</p></div>
+        <div class="card"><h4>Unidades Totales</h4><p id="total-unidades">0</p></div>
+        <div class="card"><h4>Proveedores</h4><p id="total-proveedores">0</p></div>
+        <div class="card"><h4>Última Actualización</h4><p id="ultima-actualizacion">-</p></div>
+      </div>
+      <div class="grid grid-2 mt-2">
+        <div class="card"><h4>Artículos Recientes</h4><p class="text-muted">No hay artículos recientes</p></div>
+        <div class="card"><h4>Distribución por Proveedor</h4><p class="text-muted">Total SKUs: 0</p></div>
+      </div>
+      <div class="grid grid-3 mt-2">
+        <div class="card"><h4>-60 Días de Vida</h4><p>0</p></div>
+        <div class="card"><h4>61 a 90 Días</h4><p>0</p></div>
+        <div class="card"><h4>91 a 120 Días</h4><p>0</p></div>
+        <div class="card"><h4>+121 Días</h4><p>0</p></div>
+        <div class="card"><h4>Sin Fecha / PFN</h4><p>0</p></div>
+        <div class="card"><h4>Distribución de vencimientos</h4><p class="text-muted">No hay datos disponibles</p></div>
+      </div>
+      <h3 class="mt-2">Productos más urgentes</h3>
+      <table><thead><tr><th>Bodega</th><th>Código</th><th>Descripción</th><th>Vence</th><th>Días</th></tr></thead><tbody><tr><td colspan="5" class="text-muted text-center">No hay datos de vencimiento</td></tr></tbody></table>
+    </section>
+
+    <section id="vencimientos">
+      <h2>Carga Manual</h2>
+      <p class="text-muted mb-2">Carga manual de vencimientos. Disponible solo para el usuario verificadorsps. La eliminación asociada realiza respaldo automático en <code>vencimientos_backup</code>.</p>
+      <div class="form-group">
+        <label>Archivo CSV de vencimientos</label>
+        <input type="file" id="csv-vencimientos" accept=".csv">
+        <p class="text-sm text-muted mt-1">Columnas requeridas: fecha_captura, sede, idbodega, codigo, descripcion, fecha_vencimiento.</p>
+        <pre>Formato esperado:<br>fecha_captura,sede,idbodega,codigo,descripcion,fecha_vencimiento,codigo_barra,proveedor,inventario_reporteria,masterpack,cajas_fardos,unidades,costo_unitario,costototal,total,usuario</pre>
+      </div>
+      <div class="form-group"><label>Vista previa del archivo</label><div id="preview-vencimientos" class="text-muted">-</div></div>
+      <div class="flex">
+        <button class="btn-primary" onclick="simularAccion('Importando vencimientos...')">Importar Vencimientos</button>
+        <button class="btn-secondary" onclick="document.getElementById('csv-vencimientos').value=''">Limpiar</button>
+      </div>
+    </section>
+
+    <section id="inventario-diario">
+      <h2>Registro de Inventarios Diarios</h2>
+      <div class="grid grid-3">
+        <div class="form-group"><label>Sede *</label><select required><option>Seleccione</option><option>Amarateca</option><option>La Ceiba</option><option>San Pedro Sula</option><option>Santa Rosa de Copan</option><option>Tegucigalpa</option></select></div>
+        <div class="form-group"><label>Identificador Bodega *</label><select required><option>Cargando bodegas...</option></select></div>
+        <div class="form-group"><label>Fecha Actual *</label><input type="date" required></div>
+      </div>
+
+      <!-- CHECKBOX Y FECHA VENCIMIENTO -->
+      <div class="checkbox-group">
+        <input type="checkbox" id="check-vencimiento" onchange="toggleVencimiento(this)">
+        <label for="check-vencimiento" style="margin:0; cursor:pointer;">Registrar vencimiento</label>
+      </div>
+      <p class="text-sm text-muted mb-2">Activa la casilla para registrar fecha de vencimiento (solo aplica cuando la bodega maneja vencimiento).</p>
+      
+      <div class="form-group hidden" id="grupo-vencimiento">
+        <label>Fecha Vencimiento *</label>
+        <input type="date" id="input-vencimiento">
+      </div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label>Códigos de Barra *</label>
+          <div class="flex">
+            <input type="text" id="codigo-barra-input" placeholder="Escanee o escriba...">
+            <button class="btn-outline" id="btn-escaner" onclick="toggleScanner()">📷 Escáner</button>
+          </div>
+          <div id="scanner-wrapper" class="scanner-container">
+            <div id="reader"></div>
+            <p id="scanner-status" class="text-muted text-sm mt-1">Cámara inactiva</p>
+            <button class="btn-secondary mt-2" id="btn-detener-escaner" onclick="stopScanner()" style="display:none;">Detener Escáner</button>
+          </div>
+        </div>
+        <div class="form-group"><label>Proveedor</label><input type="text" id="prov-input"></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="form-group"><label>Descripción del Artículo</label><input type="text" id="desc-input"></div>
+        <div class="form-group"><label>Inventario en Reportería</label><input type="number" id="inv-reporteria" oninput="calcularTotal()"></div>
+        <div class="form-group"><label>Masterpack</label><input type="number" id="masterpack" oninput="calcularTotal()"></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="form-group"><label>Cajas/Fardos en Reportería</label><input type="number" id="cajas-reporteria" oninput="calcularTotal()"></div>
+        <div class="form-group"><label>Unidades en Reportería</label><input type="number" id="und-reporteria" oninput="calcularTotal()"></div>
+        <div class="form-group"><label>Costo Unitario</label><input type="number" step="0.01" id="costo-unit" oninput="calcularTotal()"></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="form-group"><label>Código del Artículo *</label><input type="text" id="codigo-articulo" required></div>
+        <div class="form-group"><label>Código de Barra Artículo *</label><input type="text" id="codigo-barra-art" required></div>
+        <div class="form-group"><label>Cajas / Fardos</label><input type="number" id="cajas-fardos" oninput="calcularTotal()"></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group"><label>Unidades</label><input type="number" id="unidades" oninput="calcularTotal()"></div>
+        <div class="form-group"><label>Total Unidades</label><input type="text" id="total-unidades-calc" readonly placeholder="(Cajas × Masterpack) + Unidades" style="background:#f8fafc; font-weight:bold;"></div>
+      </div>
+      <div class="flex mt-2">
+        <button class="btn-secondary" onclick="limpiarFormulario()">Limpiar</button>
+        <button class="btn-primary" onclick="agregarArticulo()">Agregar Artículo</button>
+        <button class="btn-danger" onclick="eliminarUltimo()">Eliminar</button>
+      </div>
+    </section>
+
+    <section id="inventario">
+      <h2>Inventario Actual</h2>
+      <table>
+        <thead><tr><th>Bodega</th><th>Fecha</th><th>Código</th><th>Descripción</th><th>Reportería</th><th>Factor</th><th>C/F</th><th>Und</th><th>Reportería</th><th>DIF</th><th>VAL</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-inventario"><tr><td colspan="12" class="text-muted text-center">No hay artículos en el inventario</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="transitos">
+      <h2>Tránsitos / Pendientes</h2>
+      <div class="flex mb-2">
+        <button class="btn-outline" onclick="simularAccion('Editando registros...')">Editar Registros</button>
+        <button class="btn-primary" onclick="simularAccion('Guardando registros...')">Guardar Registros</button>
+      </div>
+      <table>
+        <thead><tr><th>Bodega</th><th>Código</th><th>Descripción</th><th>Costo</th><th>Total</th><th>Diferencia</th><th>Cantidad</th><th>Justificación</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla-transitos"><tr><td colspan="9" class="text-muted text-center">Sin datos</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="exportar">
+      <h2>Exportación Informe</h2>
+      <div class="form-group">
+        <label>Seleccionar Campos a Exportar</label>
+        <div class="grid grid-4 text-sm">
+          <label><input type="checkbox" checked> Bodega</label><label><input type="checkbox" checked> Fecha Actual</label><label><input type="checkbox" checked> Fecha Vencimiento</label><label><input type="checkbox" checked> Código</label>
+          <label><input type="checkbox" checked> Código de Barra</label><label><input type="checkbox" checked> Proveedor</label><label><input type="checkbox" checked> Descripción</label><label><input type="checkbox" checked> Inv. Reportería</label>
+          <label><input type="checkbox" checked> Masterpack</label><label><input type="checkbox" checked> Cajas/Fardos</label><label><input type="checkbox" checked> Unidades</label><label><input type="checkbox" checked> Total</label>
+          <label><input type="checkbox" checked> Diferencia</label><label><input type="checkbox" checked> Validación</label><label><input type="checkbox" checked> Días de Vida</label><label><input type="checkbox" checked> Justificación</label>
+          <label><input type="checkbox" checked> Cantidad Justificada</label><label><input type="checkbox" checked> Usuario Justificación</label><label><input type="checkbox" checked> Fecha Justificación</label>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="simularAccion('Generando XLSX con codificación UTF-8...')">Exportar a XLSX</button>
+      <div class="mt-2 p-2" style="background:#f8fafc; border:1px solid var(--border); border-radius:4px;">
+        <h4>Información de Exportación</h4>
+        <p class="text-sm text-muted">Formato XLSX: El archivo se generará con codificación UTF-8 para garantizar la compatibilidad con Excel y otros programas de hojas de cálculo modernos.</p>
+      </div>
+    </section>
+
+    <section id="importar-inventario">
+      <h2>Importar Inventario</h2>
+      <div class="grid grid-2">
+        <div class="card"><h4>Convertidor IR</h4><p class="text-muted text-sm">Archivo Excel .xlsm</p></div>
+        <div class="card"><h4>Formato Inventario</h4><p class="text-muted text-sm">Archivo CSV para cargar a sistema</p></div>
+      </div>
+      <div class="form-group mt-2">
+        <h4>Carga de Inventario Teórico</h4>
+        <p class="text-sm text-muted mb-2">Formato esperado: Fecha,Proveedor,Código de Barra, Codigo,Descripcion,Inventario Reporteria,Masterpack,Bodega</p>
+        <input type="file" accept=".csv,.xlsx,.xlsm" id="file-inventario">
+        <div class="form-group"><label>Vista previa del archivo</label><div id="preview-inventario" class="text-muted">-</div></div>
+        <button class="btn-primary" onclick="simularAccion('Importando Reportería...')">Importar Reportería</button>
+      </div>
+      <h4 class="mt-2">Últimas 5 cargas de Inventario</h4>
+      <table><thead><tr><th>Usuario</th><th>Cantidad de Códigos</th><th>Fecha</th></tr></thead><tbody id="tabla-cargas-inv"><tr><td colspan="3" class="text-muted text-center">No hay registros</td></tr></tbody></table>
+    </section>
+
+    <section id="importar-codigos">
+      <h2>Importar Base de Códigos</h2>
+      <div class="grid grid-2">
+        <div class="card"><h4>Convertidor BDD</h4><p class="text-muted text-sm">Archivo Excel .xlsm</p></div>
+        <div class="card"><h4>Formato BDD</h4><p class="text-muted text-sm">Archivo CSV para cargar a sistema</p></div>
+      </div>
+      <div class="form-group mt-2">
+        <h4>Carga de Base de Códigos</h4>
+        <p class="text-sm text-muted mb-2">Formato esperado: Codigo,Descripcion,Proveedor,Masterpack,Código de Barra,Costo</p>
+        <input type="file" accept=".csv,.xlsx" id="file-codigos">
+        <div class="form-group"><label>Vista previa del archivo</label><div id="preview-codigos" class="text-muted">-</div></div>
+        <div class="flex">
+          <button class="btn-primary" onclick="simularAccion('Importando Base de Códigos...')">Importar Base de Códigos</button>
+          <button class="btn-danger" onclick="confirmarAccion('¿Eliminar base de datos? Esta acción no se puede deshacer.')">Eliminar Base de Datos</button>
+        </div>
+      </div>
+      <h4 class="mt-2">Últimos movimientos de códigos</h4>
+      <table><thead><tr><th>Usuario</th><th>Cantidad de Códigos</th><th>Fecha</th></tr></thead><tbody id="tabla-mov-cod"><tr><td colspan="3" class="text-muted text-center">No hay registros</td></tr></tbody></table>
+    </section>
+
+    <section id="usuarios">
+      <h2>Gestión de Usuarios</h2>
+      <table><thead><tr><th>Usuario</th><th>Nombre Corto</th><th>Rol</th><th>Sede</th></tr></thead><tbody id="tabla-usuarios"><tr><td colspan="4" class="text-muted text-center">Cargando usuarios...</td></tr></tbody></table>
+
+      <h3 class="mt-2">Crear Nuevo Usuario</h3>
+      <div class="grid grid-3">
+        <div class="form-group"><label>Usuario *</label><input type="text" required></div>
+        <div class="form-group"><label>Nombre Corto *</label><input type="text" required></div>
+        <div class="form-group"><label>Email *</label><input type="email" required></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="form-group"><label>DNI *</label><input type="text" required></div>
+        <div class="form-group"><label>Contraseña *</label><input type="password" required></div>
+        <div class="form-group"><label>Confirmar Contraseña *</label><input type="password" required></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group"><label>Sede *</label><select><option>Amarateca</option><option>La Ceiba</option><option>San Pedro Sula</option><option>Santa Rosa de Copan</option><option>Tegucigalpa</option></select></div>
+        <div class="form-group"><label>Rol *</label><select><option>Usuario</option><option>Administrador</option></select></div>
+      </div>
+      <div class="flex mt-2">
+        <button class="btn-secondary">Cancelar</button>
+        <button class="btn-primary" onclick="simularAccion('Guardando usuario...')">Guardar Usuario</button>
+        <button class="btn-outline" onclick="simularAccion('Preparando nuevo formulario...')">Nuevo Usuario</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Filtros para Exportar</h3>
+      <div class="flex">
+        <div class="form-group" style="flex:1"><label>Sede</label><select><option>Todas las sedes</option><option>Amarateca</option><option>La Ceiba</option><option>San Pedro Sula</option><option>Santa Rosa de Copan</option><option>Tegucigalpa</option></select></div>
+        <div class="form-group" style="flex:1"><label>Tipo de Bodega</label><select><option>Todas las bodegas</option><option>Principal</option><option>PPV</option><option>PFN</option></select></div>
+      </div>
+      <div class="flex mt-2">
+        <button class="btn-secondary">Cancelar</button>
+        <button class="btn-primary" onclick="simularAccion('Descargando XLSX...')">Descargar XLXS</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Elaborado por Hernán Manuel Pérez Banegas®</p>
+    <button class="btn-outline mt-2" onclick="document.getElementById('modal-ayuda').classList.add('active')">🤖 Asistente de Ayuda</button>
+  </footer>
+
+  <div id="modal-auth" class="modal">
+    <div class="modal-content">
+      <h3>Autorización requerida</h3>
+      <p class="mt-2 mb-2">Esta acción requiere permisos especiales. ¿Continuar?</p>
+      <div class="flex">
+        <button class="btn-secondary" onclick="closeModal('modal-auth')">Cancelar</button>
+        <button class="btn-primary" onclick="closeModal('modal-auth')">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-ayuda" class="modal">
+    <div class="modal-content">
+      <h3>Asistente de Ayuda</h3>
+      <p class="text-muted mb-2">Consultas rápidas del sistema</p>
+      <div style="background:#f8fafc; padding:1rem; border-radius:6px; margin:1rem 0; max-height:200px; overflow-y:auto; border:1px solid var(--border);">
+        <p>Hola. Puedo ayudarte con consultas del sistema y, si conectas la función Edge, responder con contexto real.</p>
+        <p class="mt-1">Puedes preguntarme cosas como:</p>
+        <ul class="text-sm mt-1" style="padding-left:1.2rem;">
+          <li>Registrar artículo</li>
+          <li>Importar códigos</li>
+          <li>Qué es DIF</li>
+          <li>Usar escáner</li>
+          <li>Exportación Informe</li>
+          <li>Formato inventario</li>
+        </ul>
+      </div>
+      <p class="text-sm text-muted">Creado por Hernán Banegas.</p>
+      <button class="btn-primary mt-2" onclick="closeModal('modal-ayuda')">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Lógica optimizada y modular ---
+    function simularAccion(msg) { alert(msg); }
+    function confirmarAccion(msg) { if(confirm(msg)) alert('Ejecutando...'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // Toggle Fecha Vencimiento
+    function toggleVencimiento(checkbox) {
+      const group = document.getElementById('grupo-vencimiento');
+      const input = document.getElementById('input-vencimiento');
+      if (checkbox.checked) {
+        group.classList.remove('hidden');
+        input.required = true;
+      } else {
+        group.classList.add('hidden');
+        input.required = false;
+        input.value = '';
+      }
+    }
+
+    // Escáner optimizado con html5-qrcode
+    let scannerInstance = null;
+    let isScanning = false;
+
+    function toggleScanner() {
+      if (isScanning) return;
+      const status = document.getElementById('scanner-status');
+      const btnStop = document.getElementById('btn-detener-escaner');
+      const readerDiv = document.getElementById('reader');
+
+      status.textContent = "Iniciando cámara...";
+      readerDiv.style.display = 'block';
+      btnStop.style.display = 'inline-block';
+      isScanning = true;
+
+      scannerInstance = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 100 }, aspectRatio: 1.0 };
+      
+      scannerInstance.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+          document.getElementById('codigo-barra-input').value = decodedText;
+          document.getElementById('codigo-barra-art').value = decodedText;
+          stopScanner();
+          simularAccion(`✅ Código detectado: ${decodedText}`);
+        },
+        () => {} // Ignorar errores continuos de escaneo
+      ).catch(err => {
+        status.textContent = "❌ Error de cámara. Verifique permisos o use HTTPS.";
+        stopScanner();
+      });
+    }
+
+    function stopScanner() {
+      if (scannerInstance && isScanning) {
+        scannerInstance.stop().then(() => {
+          document.getElementById('reader').style.display = 'none';
+          document.getElementById('scanner-status').textContent = "Cámara detenida.";
+          document.getElementById('btn-detener-escaner').style.display = 'none';
+          isScanning = false;
+          scannerInstance.clear();
+        }).catch(console.error);
+      }
+    }
+
+    // Cálculo dinámico
+    function calcularTotal() {
+      const cajas = parseFloat(document.getElementById('cajas-fardos').value) || 0;
+      const master = parseFloat(document.getElementById('masterpack').value) || 0;
+      const und = parseFloat(document.getElementById('unidades').value) || 0;
+      const total = (cajas * master) + und;
+      document.getElementById('total-unidades-calc').value = total > 0 ? total : 0;
+    }
+
+    function limpiarFormulario() {
+      const inputs = document.querySelectorAll('#inventario-diario input:not([type="checkbox"]), #inventario-diario select');
+      inputs.forEach(i => i.value = '');
+      document.getElementById('check-vencimiento').checked = false;
+      toggleVencimiento(document.getElementById('check-vencimiento'));
+      calcularTotal();
+    }
+
+    function agregarArticulo() {
+      const tbody = document.getElementById('tabla-inventario');
+      if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+      const fecha = new Date().toISOString().split('T')[0];
+      const codigo = document.getElementById('codigo-articulo').value || 'ART-001';
+      const desc = document.getElementById('desc-input').value || 'Artículo Demo';
+      const row = tbody.insertRow();
+      row.innerHTML = `<td>Principal</td><td>${fecha}</td><td>${codigo}</td><td>${desc}</td><td>100</td><td>12</td><td>8</td><td>4</td><td>100</td><td>0</td><td><span style="color:var(--success)">OK</span></td><td><button class="btn-danger" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="this.closest('tr').remove()">Eliminar</button></td>`;
+      simularAccion('Artículo agregado correctamente.');
+    }
+
+    function eliminarUltimo() {
+      const tbody = document.getElementById('tabla-inventario');
+      if (tbody.rows.length > 1) tbody.deleteRow(-1);
+      else tbody.innerHTML = '<tr><td colspan="12" class="text-muted text-center">No hay artículos en el inventario</td></tr>';
+    }
+
+    // Inicialización segura
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.querySelectorAll('input[type="date"]').forEach(el => { if(!el.value) el.value = today; });
+    });
+  </script>
+</body>
+</html>

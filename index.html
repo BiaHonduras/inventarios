@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Inventarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://raw.githubusercontent.com/BiaHonduras/proyecto/main/favicon.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script type="module" defer>
+        import { supabase, iniciarSesion, cerrarSesion } from './supabase-config.js';
+    
+        window.supabase = supabase;
+        window.iniciarSesionSupabase = iniciarSesion;
+        window.cerrarSesionSupabase = cerrarSesion;
+    </script>
+
+    <style>
+        body {
+            background: url('https://raw.githubusercontent.com/BiaHonduras/proyecto/aba1871d9b07f98007ef577d78932e28432b0bf0/background.png') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.68);
+            backdrop-filter: blur(6px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container max-w-md mx-auto">
+        <div class="card rounded-xl shadow-2xl p-8 text-white">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
+                    <img src="https://raw.githubusercontent.com/BiaHonduras/proyecto/aab31452ef41ac1708e16a0551975df1c2129106/biaNL.png" class="h-12" alt="logo">
+                </div>
+                <p class="text-white/80 text-lg font-bold">Sistema de Gestión de Inventarios Diarios</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6" novalidate>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="username">Usuario</label>
+                    <input type="text" id="username" maxlength="50" autocomplete="username" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Ingresa tu usuario" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="password">Contraseña</label>
+                    <input type="password" id="password" maxlength="128" autocomplete="current-password" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Ingresa tu contraseña" required>
+                </div>
+                <button type="submit" id="loginButton" class="btn-primary w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Iniciar Sesión</span>
+                </button>
+            </form>
+
+            <div id="errorMessage" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 hidden" role="alert" aria-live="assertive">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <div id="successMessage" class="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-100 hidden" role="status" aria-live="polite">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="successText"></span>
+            </div>
+
+            <div class="text-center mt-6">
+                <p class="text-white/70">
+                    ¿No recuerdas tu contraseña?
+                    <a href="#" id="forgotPasswordLink" class="text-white font-semibold hover:underline">Click Aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="recoveryModal" class="fixed inset-0 hidden items-center justify-center p-4 modal-backdrop z-50">
+        <div class="card rounded-xl shadow-2xl p-6 text-white w-full max-w-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">Recuperación de contraseña</h2>
+                <button id="closeRecoveryBtn" type="button" class="text-white/70 hover:text-white text-xl" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="recoveryForm" class="space-y-4" novalidate>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="recoveryUsername">Usuario</label>
+                    <input type="text" id="recoveryUsername" maxlength="50" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Ingresa tu usuario" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="recoveryDni">DNI</label>
+                    <input type="text" id="recoveryDni" maxlength="15" inputmode="numeric" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="recoveryEmail">Correo</label>
+                    <input type="email" id="recoveryEmail" maxlength="120" autocomplete="email" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="correo@empresa.com" required>
+                </div>
+                <div id="recoveryMessage" class="p-3 rounded-lg hidden" role="alert" aria-live="assertive"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="cancelRecoveryBtn" class="w-1/2 py-3 rounded-lg font-semibold bg-white/10 hover:bg-white/20 transition-colors">Cancelar</button>
+                    <button type="submit" id="recoveryButton" class="btn-primary w-1/2 py-3 rounded-lg font-semibold">Solicitar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="changePasswordModal" class="fixed inset-0 hidden items-center justify-center p-4 modal-backdrop z-50">
+        <div class="card rounded-xl shadow-2xl p-6 text-white w-full max-w-lg">
+            <div class="mb-4">
+                <h2 class="text-xl font-bold">Cambio obligatorio de contraseña</h2>
+                <p class="text-white/80 text-sm mt-2">Tu contraseña actual es temporal. Debes cambiarla antes de entrar al sistema.</p>
+            </div>
+            <form id="changePasswordForm" class="space-y-4" novalidate>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="currentTempPassword">Contraseña actual</label>
+                    <input type="password" id="currentTempPassword" maxlength="128" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Ingresa la contraseña actual" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="newPassword">Nueva contraseña</label>
+                    <input type="password" id="newPassword" maxlength="128" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Mínimo 8 caracteres" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="confirmNewPassword">Confirmar nueva contraseña</label>
+                    <input type="password" id="confirmNewPassword" maxlength="128" class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-white/60" placeholder="Repite la nueva contraseña" required>
+                </div>
+                <div id="changePasswordMessage" class="p-3 rounded-lg hidden" role="alert" aria-live="assertive"></div>
+                <button type="submit" id="changePasswordButton" class="btn-primary w-full py-3 rounded-lg font-semibold">Actualizar contraseña</button>
+            </form>
+        </div>
+    </div>
+
+<script defer>
+    const DNI_REGEX = /^\d{4}-\d{4}-\d{5}$/;
+    const loginForm = document.getElementById('loginForm');
+    const recoveryForm = document.getElementById('recoveryForm');
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const loginButton = document.getElementById('loginButton');
+    const recoveryButton = document.getElementById('recoveryButton');
+    const changePasswordButton = document.getElementById('changePasswordButton');
+    const errorDiv = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const successDiv = document.getElementById('successMessage');
+    const successText = document.getElementById('successText');
+    const recoveryModal = document.getElementById('recoveryModal');
+    const recoveryMessage = document.getElementById('recoveryMessage');
+    const changePasswordModal = document.getElementById('changePasswordModal');
+    const changePasswordMessage = document.getElementById('changePasswordMessage');
+
+    let pendingUserForPasswordChange = null;
+    let pendingCurrentPassword = null;
+
+    document.getElementById('forgotPasswordLink').addEventListener('click', openRecoveryModal);
+    document.getElementById('closeRecoveryBtn').addEventListener('click', closeRecoveryModal);
+    document.getElementById('cancelRecoveryBtn').addEventListener('click', closeRecoveryModal);
+
+    recoveryModal.addEventListener('click', (e) => {
+        if (e.target === recoveryModal) closeRecoveryModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !recoveryModal.classList.contains('hidden')) {
+            closeRecoveryModal();
+        }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMessages();
+
+        const usuario = sanitizeText(document.getElementById('username').value);
+        const password = document.getElementById('password').value;
+
+        if (!usuario || !password) {
+            mostrarError('Completa todos los campos.');
+            return;
+        }
+
+        await secureLogin(usuario, password);
+    });
+
+    recoveryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handlePasswordRecovery();
+    });
+
+    changePasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleForcedPasswordChange();
+    });
+
+        async function secureLogin(usuario, password) {
+            setLoading(loginButton, true, 'Validando...');
+            try {
+                const { data, error } = await supabase.rpc('login_seguro', {
+                    p_usuario: usuario
+                });
+        
+                if (error) {
+                    throw new Error(error.message || 'No fue posible validar el usuario.');
+                }
+        
+                const row = normalizeRpcRow(data);
+                if (!row || !row.ok) {
+                    throw new Error(row?.mensaje || 'Usuario no válido.');
+                }
+        
+                if (!row.correo) {
+                    throw new Error('El usuario no tiene un correo configurado para iniciar sesión.');
+                }
+        
+                const authResult = await window.iniciarSesionSupabase(row.correo, password);
+                if (!authResult?.ok) {
+                    throw new Error(authResult?.error || 'Usuario o contraseña incorrectos.');
+                }
+        
+                const currentUser = {
+                    username: row.usuario,
+                    nombre_corto: row.nombre_corto,
+                    role: row.rol,
+                    correo: row.correo,
+                    sede: row.sede,
+                    tipo_bodega: row.tipo_bodega,
+                    must_change_password: !!row.must_change_password,
+                    last_login_at: new Date().toISOString()
+                };
+        
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+                if (currentUser.must_change_password) {
+                    pendingUserForPasswordChange = currentUser.username;
+                    openChangePasswordModal(password);
+                    mostrarExito('Debes cambiar tu contraseña temporal antes de continuar.');
+                    return;
+                }
+        
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                mostrarError(err.message || 'Error inesperado al iniciar sesión.');
+            } finally {
+                setLoading(loginButton, false, 'Iniciar Sesión');
+            }
+        }
+
+    async function handlePasswordRecovery() {
+        clearRecoveryMessage();
+
+        const usuario = sanitizeText(document.getElementById('recoveryUsername').value);
+        const dni = document.getElementById('recoveryDni').value.trim();
+        const dniLimpio = dni.replace(/\D/g, '');
+        const correo = document.getElementById('recoveryEmail').value.trim().toLowerCase();
+
+        if (!usuario || !dni || !correo) {
+            mostrarRecoveryMessage('Completa todos los campos.', false);
+            return;
+        }
+
+        if (!DNI_REGEX.test(dni)) {
+            mostrarRecoveryMessage('El DNI debe tener el formato 0000-0000-00000.', false);
+            return;
+        }
+
+        setLoading(recoveryButton, true, 'Procesando...');
+
+        try {
+            const { data, error } = await supabase.functions.invoke('recuperar-password-auth', {
+                body: {
+                    usuario,
+                    dniLimpio,
+                    correo
+                }
+            });
+
+            if (error) {
+                throw new Error(error.message || 'No fue posible completar la solicitud.');
+            }
+
+            if (!data?.ok) {
+                mostrarRecoveryMessage(data?.mensaje || 'Los datos ingresados no coinciden con ningún registro válido.', false);
+                return;
+            }
+
+            const mensajeExito = data?.temporary_password
+                ? `Contraseña temporal generada correctamente: ${data.temporary_password}`
+                : (data?.mensaje || 'Contraseña temporal generada correctamente.');
+
+            mostrarRecoveryMessage(mensajeExito, true);
+            recoveryForm.reset();
+        } catch (err) {
+            mostrarRecoveryMessage(err.message || 'Error inesperado al recuperar la contraseña.', false);
+        } finally {
+            setLoading(recoveryButton, false, 'Solicitar');
+        }
+    }
+
+    async function handleForcedPasswordChange() {
+        clearChangePasswordMessage();
+
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+        const usuario = pendingUserForPasswordChange || currentUser?.username;
+        const actual = document.getElementById('currentTempPassword').value;
+        const nueva = document.getElementById('newPassword').value;
+        const confirmar = document.getElementById('confirmNewPassword').value;
+
+        if (!usuario || !actual || !nueva || !confirmar) {
+            mostrarChangePasswordMessage('Completa todos los campos.', false);
+            return;
+        }
+
+        if (pendingCurrentPassword && actual !== pendingCurrentPassword) {
+            mostrarChangePasswordMessage('La contraseña actual no coincide con la utilizada para iniciar sesión.', false);
+            return;
+        }
+
+        if (nueva.length < 8) {
+            mostrarChangePasswordMessage('La nueva contraseña debe tener al menos 8 caracteres.', false);
+            return;
+        }
+
+        if (nueva !== confirmar) {
+            mostrarChangePasswordMessage('Las nuevas contraseñas no coinciden.', false);
+            return;
+        }
+
+        if (actual === nueva) {
+            mostrarChangePasswordMessage('La nueva contraseña debe ser distinta a la actual.', false);
+            return;
+        }
+
+        setLoading(changePasswordButton, true, 'Actualizando...');
+
+        try {
+            const { error: authError } = await window.supabase.auth.updateUser({
+                password: nueva
+            });
+
+            if (authError) {
+                throw new Error(authError.message || 'No fue posible actualizar la contraseña en Auth.');
+            }
+
+            const { data: profileData, error: profileError } = await window.supabase
+                .rpc('rpc_marcar_password_actualizada');
+
+            if (profileError || !profileData?.ok) {
+                throw new Error(profileData?.mensaje || profileError?.message || 'La contraseña se actualizó en Auth, pero no fue posible actualizar las banderas del usuario.');
+            }
+
+            if (currentUser) {
+                currentUser.must_change_password = false;
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+
+            pendingCurrentPassword = null;
+            mostrarExito('Contraseña actualizada correctamente.');
+            closeChangePasswordModal();
+            window.location.href = 'dashboard.html';
+        } catch (err) {
+            mostrarChangePasswordMessage(err.message || 'Error inesperado al actualizar la contraseña.', false);
+        } finally {
+            setLoading(changePasswordButton, false, 'Actualizar contraseña');
+        }
+    }
+
+    function normalizeRpcRow(data) {
+        if (Array.isArray(data)) return data[0] || null;
+        if (data && typeof data === 'object') return data;
+        return null;
+    }
+
+    function sanitizeText(value) {
+        return String(value || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function formatDNI(value) {
+        const digits = value.replace(/\D/g, '').slice(0, 13);
+        const parts = [];
+        if (digits.length > 0) parts.push(digits.slice(0, 4));
+        if (digits.length > 4) parts.push(digits.slice(4, 8));
+        if (digits.length > 8) parts.push(digits.slice(8, 13));
+        return parts.join('-');
+    }
+
+    function openRecoveryModal() {
+        clearRecoveryMessage();
+        recoveryForm.reset();
+        recoveryModal.classList.remove('hidden');
+        recoveryModal.classList.add('flex');
+        document.getElementById('recoveryUsername').focus();
+    }
+
+    function closeRecoveryModal() {
+        recoveryModal.classList.add('hidden');
+        recoveryModal.classList.remove('flex');
+    }
+
+    function openChangePasswordModal(tempPassword = '') {
+        pendingCurrentPassword = tempPassword || pendingCurrentPassword || '';
+        clearChangePasswordMessage();
+        changePasswordForm.reset();
+        changePasswordModal.classList.remove('hidden');
+        changePasswordModal.classList.add('flex');
+        document.getElementById('currentTempPassword').focus();
+    }
+
+    function closeChangePasswordModal() {
+        changePasswordModal.classList.add('hidden');
+        changePasswordModal.classList.remove('flex');
+    }
+
+    function clearMessages() {
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        errorText.textContent = '';
+        successText.textContent = '';
+    }
+
+    function mostrarError(mensaje) {
+        clearMessages();
+        errorText.textContent = mensaje;
+        errorDiv.classList.remove('hidden');
+    }
+
+    function mostrarExito(mensaje) {
+        clearMessages();
+        successText.textContent = mensaje;
+        successDiv.classList.remove('hidden');
+    }
+
+    function clearRecoveryMessage() {
+        recoveryMessage.className = 'p-3 rounded-lg hidden';
+        recoveryMessage.textContent = '';
+    }
+
+    function mostrarRecoveryMessage(mensaje, success) {
+        recoveryMessage.textContent = mensaje;
+        recoveryMessage.className = success
+            ? 'p-3 rounded-lg bg-green-500/20 border border-green-500/30 text-green-100'
+            : 'p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200';
+    }
+
+    function clearChangePasswordMessage() {
+        changePasswordMessage.className = 'p-3 rounded-lg hidden';
+        changePasswordMessage.textContent = '';
+    }
+
+    function mostrarChangePasswordMessage(mensaje, success) {
+        changePasswordMessage.textContent = mensaje;
+        changePasswordMessage.className = success
+            ? 'p-3 rounded-lg bg-green-500/20 border border-green-500/30 text-green-100'
+            : 'p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200';
+    }
+
+    function setLoading(button, isLoading, text) {
+        button.disabled = isLoading;
+
+        const icon = button.dataset.icon || '';
+        if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent.trim();
+        }
+
+        button.innerHTML = isLoading
+            ? `<i class="fas fa-spinner fa-spin"></i><span>${text}</span>`
+            : `${icon}<span>${text}</span>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        loginButton.dataset.icon = '<i class="fas fa-sign-in-alt"></i>';
+        recoveryButton.dataset.icon = '';
+        changePasswordButton.dataset.icon = '';
+
+        try {
+            await window.cerrarSesionSupabase?.();
+        } catch (err) {
+            console.warn('No se pudo cerrar la sesión previa de Supabase Auth:', err);
+        }
+    });
+</script>
+</body>
+</html>

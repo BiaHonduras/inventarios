@@ -28,10 +28,10 @@ Deno.serve(async request => {
     const entry = recent.get(auth.user.id) || { start: now, count: 0 };
     if (entry.count >= 5) return respond({ error: 'Espera un minuto antes de volver a consultar' }, 429);
     entry.count++; recent.set(auth.user.id, entry);
-    const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
+    const upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent', {
       method: 'POST', signal: AbortSignal.timeout(25000),
       headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents: [{ role: 'user', parts: [{ text: question }] }], generationConfig: { maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 } } })
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents: [{ role: 'user', parts: [{ text: question }] }], generationConfig: { maxOutputTokens: 800 } })
     });
     if (!upstream.ok) {
       const category = upstream.status === 429 ? 'gemini_limit' : [400, 401, 403].includes(upstream.status) ? 'configuration' : 'upstream';

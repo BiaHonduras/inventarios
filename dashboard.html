@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="visibility:hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,10 @@
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
+        import { requireInventorySession, siteCode } from './intranet-session.mjs';
+        window.inventoryAuthReady = requireInventorySession(supabase);
+        window.inventorySiteCode = siteCode;
+        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') { sessionStorage.removeItem('currentUser'); location.replace('../control-tiempos/intranet.html'); } });
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
 
@@ -1027,7 +1031,7 @@
                     <i class="fas fa-database"></i>
                     Importar Códigos
                 </a>
-				<a href="https://biahonduras.github.io/proyecto/resumen.html" class="nav-item">
+				<a href="./resumen.html" class="nav-item">
                     <i class="fas fa-database"></i>
                     Dashboard
                 </a>
@@ -1036,7 +1040,7 @@
                     <i class="fas fa-database"></i>
                     Depuración
                 </a>
-                <a href="#usuarios" class="nav-item" data-section="usuarios">
+                <a href="../control-tiempos/intranet.html" class="nav-item" id="usuarios-intranet">
                     <i class="fas fa-users-cog"></i>
                     Gestión de Usuarios
                 </a>
@@ -1836,7 +1840,7 @@
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">Formatos disponibles</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20IR.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgSVIueGxzbSIsImlhdCI6MTc3NjI2NTkwMywiZXhwIjoxODA3ODAxOTAzfQ.1HDtYNE92kKsugOTiFAoZyAjZd6EJ_XYoTutt4y1f4U"
+                            <a href="#" data-inventory-download="Convertidor IR.xlsm"
                                target="_blank"
                                rel="noopener noreferrer"
                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
@@ -1849,7 +1853,7 @@
                                 </div>
                             </a>
 
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20Inventario.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBJbnZlbnRhcmlvLmNzdiIsImlhdCI6MTc3NjI2NTkzMSwiZXhwIjoxODA3ODAxOTMxfQ.fbjjEoreypjJ5_uBwHcQ4mSeBL-xIAJlmopNP0elVAk"
+                            <a href="#" data-inventory-download="Formato Inventario.csv"
                                target="_blank"
                                rel="noopener noreferrer"
                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
@@ -1940,7 +1944,7 @@
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">Formatos disponibles</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Convertidor%20BDD.xlsm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvQ29udmVydGlkb3IgQkRELnhsc20iLCJpYXQiOjE3NzYyNjU4OTIsImV4cCI6MTgwNzgwMTg5Mn0.hj0d2B4uKy7SN-TH1RWgzpitToMXz4YSxi7vU36bVxw"
+                            <a href="#" data-inventory-download="Convertidor BDD.xlsm"
                                target="_blank"
                                rel="noopener noreferrer"
                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
@@ -1953,7 +1957,7 @@
                                 </div>
                             </a>
 
-                            <a href="https://czxzghhwgfciyrgmgtai.supabase.co/storage/v1/object/sign/Assets/Formato%20BDD.csv?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85Zjg0NzcyMS05MGFlLTQ0OTAtODg4MC0yYzdiMWU5YmE4NzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBc3NldHMvRm9ybWF0byBCREQuY3N2IiwiaWF0IjoxNzc2MjY1OTI2LCJleHAiOjE4MDc4MDE5MjZ9.D8qoUaSGpojeod4chj3uQKlqiKeK5x_bu9U8xxY_PFY"
+                            <a href="#" data-inventory-download="Formato BDD.csv"
                                target="_blank"
                                rel="noopener noreferrer"
                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
@@ -2313,23 +2317,10 @@
             ).trim().toLowerCase();
         }
 
-        function usuarioPuedeGestionarUsuarios(user = currentUser) {
-            return esAdmin(user);
-        }
-
+        function usuarioPuedeGestionarUsuarios(user = currentUser) { return user?.can_users === true; }
         function aplicarRestriccionGestionUsuarios() {
-            const navUsuarios = document.querySelector('[data-section="usuarios"]');
-            const seccionUsuarios = document.getElementById('usuarios-section');
-
-            if (usuarioPuedeGestionarUsuarios()) return;
-
-            if (navUsuarios) {
-                navUsuarios.style.display = 'none';
-            }
-
-            if (seccionUsuarios) {
-                seccionUsuarios.remove();
-            }
+            const nav = document.getElementById('usuarios-intranet');
+            if (nav) nav.style.display = usuarioPuedeGestionarUsuarios() ? '' : 'none';
         }
 
         function usuarioPuedeGestionarVencimientos(user = currentUser) {
@@ -2580,13 +2571,13 @@
 		    const rol = (currentUser?.role || currentUser?.rol || '').toLowerCase();
     		const esAdmin = rol === 'admin' || rol === 'superadmin';
 		
-		    filtrosGlobales.sede = esAdmin ? 'Todas' : (sedeUsuario || 'Todas');
+		    filtrosGlobales.sede = esAdmin || currentUser.sedes.length > 1 ? 'Todas' : (sedeUsuario || 'Todas');
 		    filtrosGlobales.tipoBodega = esAdmin ? 'Todas' : (tipoBodegaUsuario || 'Todas');
 		
 		    filtroSede.value = filtrosGlobales.sede;
 		    filtroTipoBodega.value = filtrosGlobales.tipoBodega;
 		
-		    if (!esAdmin && sedeUsuario) {
+		    if (!esAdmin && currentUser.sedes.length === 1 && sedeUsuario) {
 		        filtroSede.disabled = true;
 		        filtroSede.classList.add('bg-gray-100');
 		    }
@@ -2690,31 +2681,45 @@
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
             
-			// Verificar autenticación
-            const userData = sessionStorage.getItem('currentUser');
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            try {
-                const { data: authData, error: authError } = await window.supabase.auth.getUser();
-                if (authError || !authData?.user) {
-                    sessionStorage.removeItem('currentUser');
-                    window.currentUser = null;
-                    window.location.href = 'index.html';
-                    return;
-                }
-            } catch (err) {
-                console.error('No fue posible validar la sesión activa en Supabase Auth:', err);
-                sessionStorage.removeItem('currentUser');
-                window.currentUser = null;
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            currentUser = JSON.parse(userData);
+            const auth = await window.inventoryAuthReady;
+            if (auth.status !== 'ok') return;
+            currentUser = auth.currentUser;
             window.currentUser = currentUser;
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            const allowedSites = currentUser.sedes;
+            document.querySelectorAll('select').forEach(select => {
+                Array.from(select.options).forEach(option => {
+                    const code = window.inventorySiteCode(option.value);
+                    if (code && !allowedSites.includes(code)) { option.hidden = true; option.disabled = true; }
+                });
+            });
+            if (!currentUser.can_write) {
+                ['inventario-diario','importar-inventario','importar-codigos','depuracion'].forEach(id => {
+                    const link = document.querySelector(`[data-section="${id}"]`); if (link) link.style.display = 'none';
+                });
+                ['btnEditarRegistros','btnGuardarRegistros','btn-eliminar-vencimientos','bloqueCargaManualBtn'].forEach(id => {
+                    const button = document.getElementById(id); if (button) button.style.display = 'none';
+                });
+            }
+            document.querySelectorAll('[data-inventory-download]').forEach(link => {
+                link.removeAttribute('target');
+                link.addEventListener('click', async event => {
+                    event.preventDefault();
+                    const name = link.dataset.inventoryDownload;
+                    try {
+                        const { data, error } = await window.supabase.storage.from('Assets').download(name);
+                        if (error || !data) throw error || new Error('No se pudo descargar el archivo');
+                        const url = URL.createObjectURL(data);
+                        const download = document.createElement('a');
+                        download.href = url; download.download = name; document.body.append(download); download.click(); download.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 60000);
+                    } catch (error) {
+                        console.error('Error al descargar el formato:', error);
+                        showNotification('Error', 'No se pudo descargar el formato. Verifica tu acceso y vuelve a intentarlo.', 'error');
+                    }
+                });
+            });
+            document.documentElement.style.visibility = 'visible';
 
 			document.getElementById('filtroSedeVerInventario')?.addEventListener('change', loadInventory);
 			document.getElementById('filtroTipoBodegaVerInventario')?.addEventListener('change', loadInventory);
@@ -2736,19 +2741,7 @@
 				loadTransitos();
 			});
 
-            if (currentUser.must_change_password) {
-                alert('Debe cambiar su contraseña antes de continuar.');
-                try {
-                    await window.supabase.auth.signOut();
-                } catch (err) {
-                    console.warn('No se pudo cerrar la sesión al forzar cambio de contraseña:', err);
-                }
-                sessionStorage.removeItem('currentUser');
-                window.currentUser = null;
-                window.location.href = 'index.html';
-                return;
-            }
-			
+
 			const btnEliminarVencimientos = document.getElementById('btn-eliminar-vencimientos');
 			    if (btnEliminarVencimientos) {
 			        btnEliminarVencimientos.addEventListener('click', eliminarVencimientosProtegido);
@@ -2756,6 +2749,8 @@
 			
 			const nombreCortoEl = document.getElementById('nombreCorto');
             if (nombreCortoEl) nombreCortoEl.textContent = currentUser.nombre_corto || '';
+            const footerName = document.getElementById('userShortNameFooter');
+            if (footerName) footerName.textContent = currentUser.nombre_corto || '';
 			
 			const filtroSedeVenc = document.getElementById('filtroSedeVencimientos');
 		    const filtroBodegaVenc = document.getElementById('filtroTipoBodegaVencimientos');
@@ -2908,7 +2903,7 @@
             mostrarRecordatorioVencimiento();
             loadInventory();
             cargarResumenInventario();
-            initUsers(); // Initialize user management
+            // La administración de usuarios se realiza en la Intranet.
 			initAssistant();
             
             // Configurar formulario de artículo
@@ -3069,9 +3064,9 @@
 			    // Importar vencimientos CSV
 			    const btnImpVenc = document.getElementById('btn-importar-vencimientos');
 
-				btnImpVenc.addEventListener('click', () => {
-				    modalCarga.classList.remove('hidden');
-				    modalCarga.classList.add('flex');
+				btnImpVenc?.addEventListener('click', () => {
+				    modalCargaManual?.classList.remove('hidden');
+				    modalCargaManual?.classList.add('flex');
 				});
 			    
 			    // Limpiar preview
@@ -3162,10 +3157,7 @@
             // Logout
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    sessionStorage.removeItem('currentUser');
-                    window.location.href = 'index.html';
-                });
+                logoutBtn.addEventListener('click', logout);
             }
         }
 
@@ -4513,8 +4505,8 @@ function normalizarNombreColumnaCSV(nombre = '') {
             };
 
             reader.readAsText(file);
-			modalCarga.classList.add('hidden');
-		    modalCarga.classList.remove('flex');
+			document.getElementById('modalCargaManual')?.classList.add('hidden');
+		    document.getElementById('modalCargaManual')?.classList.remove('flex');
 		
 		    limpiarImportVencimientos();
         }
@@ -4783,50 +4775,11 @@ function normalizarNombreColumnaCSV(nombre = '') {
             };
         }
 
-        async function validarCredencialesAdministrador(usuario, password) {
-		    const usuarioIngresado = String(usuario || '').trim();
-		    const passwordIngresado = String(password || '');
-		
-		    const { data, error } = await supabase
-		        .from('usuarios')
-		        .select('usuario, correo, rol, contraseña')
-		        .or(`usuario.eq.${usuarioIngresado},correo.eq.${usuarioIngresado}`);
-		
-		    if (error) {
-		        console.error(error);
-		        throw new Error('No se pudo validar el usuario administrador');
-		    }
-		
-		    const registro = (data || []).find(item => {
-		        const rol = String(item.rol || '').trim().toLowerCase();
-		        const pass = String(item.contraseña || '');
-		        return (rol === 'admin' || rol === 'superadmin') && pass === passwordIngresado;
-		    });
-		
-		    return !!registro;
-		}
-
         async function solicitarAutorizacionAdmin() {
-		    const rolActual = String(currentUser?.role || currentUser?.rol || '').trim().toLowerCase();
-		    const usuarioActual = currentUser?.username || currentUser?.usuario || currentUser?.email || 'desconocido';
-		
-		    if (rolActual === 'superadmin') {
-		        return usuarioActual;
-		    }
-		
-		    const credenciales = await abrirModalAuth();
-		    if (!credenciales) return null;
-		
-		    const { usuario, password } = credenciales;
-		    const credencialesValidas = await validarCredencialesAdministrador(usuario, password);
-		
-		    if (!credencialesValidas) {
-		        showNotification('Error', 'Credenciales inválidas o sin permisos de administrador', 'error');
-		        return null;
-		    }
-		
-		    return usuario;
-		}
+            if (currentUser?.can_delete) return currentUser.username || currentUser.email;
+            showNotification('Sin permiso', 'Esta acción requiere una cuenta administradora.', 'error');
+            return null;
+        }
 
         async function eliminarGeneralProtegido() {
             const confirmar = confirm(
@@ -5905,7 +5858,7 @@ async function guardarJustificacion(id, texto) {
             }
 	    sessionStorage.removeItem('currentUser');
             window.currentUser = null;
-	    window.location.href = 'index.html';
+	    window.location.href = '../control-tiempos/intranet.html';
 		}
 		
 	function activarModoEdicion() {
@@ -6932,3 +6885,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+

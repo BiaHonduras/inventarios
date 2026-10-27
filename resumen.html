@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="visibility:hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +15,9 @@
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
+        import { requireInventorySession } from './intranet-session.mjs';
+        window.inventoryAuthReady = requireInventorySession(supabase);
+        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') location.replace('../control-tiempos/intranet.html'); });
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
     </script>
@@ -956,6 +959,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const auth = await window.inventoryAuthReady;
+            if (auth.status !== 'ok') return;
+            window.currentUser = auth.currentUser;
+            document.documentElement.style.visibility = 'visible';
+            document.getElementById('logoutBtn')?.addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('../control-tiempos/intranet.html'); });
             configurarEventosFiltros();
             await aplicarFiltrosDashboard();
 
@@ -968,3 +976,4 @@
     </script>
 </body>
 </html>
+

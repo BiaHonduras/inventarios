@@ -33,10 +33,18 @@ Deno.serve(async request => {
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input: question, max_output_tokens: 800, store: false })
     });
-    if (!upstream.ok) { console.error('OpenAI request failed', upstream.status); return respond({ error: 'No se pudo contactar al servicio de IA' }, 502); }
+    if (!upstream.ok) {
+      const payload = await upstream.json().catch(() => null);
+      const code = String(payload?.error?.code || payload?.error?.type || '');
+      const quotaCodes = ['insufficient_quota','credit_balance_exhausted','organization_spend_limit_exceeded','project_spend_limit_exceeded','organization_usage_limit_exceeded'];
+      const category = quotaCodes.includes(code) ? 'quota' : upstream.status === 429 ? 'rate_limit' : upstream.status === 401 ? 'credentials' : 'upstream';
+      console.error('OpenAI request failed', upstream.status, category);
+      return respond({ error: 'El asistente con IA no está disponible', reason: category }, 502);
+    }
     const result = await upstream.json();
     const answer = (result.output || []).flatMap(item => item.content || []).filter(part => part.type === 'output_text').map(part => part.text || '').join('\n').trim();
     if (!answer) return respond({ error: 'El servicio de IA no devolvió una respuesta' }, 502);
     return respond({ answer });
   } catch (error) { console.error('assistant unavailable', error instanceof Error ? error.name : 'error'); return respond({ error: 'El asistente no está disponible' }, 503); }
 });
+

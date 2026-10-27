@@ -219,6 +219,11 @@
                     });
                     if (!error && typeof data?.answer === 'string' && data.answer.trim()) return data.answer.trim();
                     if (error?.context?.status === 429) return 'Has alcanzado el límite temporal de consultas. Espera un minuto e inténtalo de nuevo.';
+                    let detail = null;
+                    try { detail = await error?.context?.json(); } catch (_) {}
+                    if (detail?.reason === 'quota') return 'La cuenta de OpenAI no tiene crédito disponible o alcanzó su límite de gasto. Revisa la facturación o el límite del proyecto en OpenAI.';
+                    if (detail?.reason === 'rate_limit') return 'OpenAI alcanzó temporalmente su límite de consultas. Espera unos minutos y vuelve a intentarlo.';
+                    if (detail?.reason === 'credentials') return 'OpenAI no aceptó la clave configurada. Un administrador debe revisar el secreto OPENAI_API_KEY en Supabase.';
                 } catch (error) { console.warn('La ayuda con IA no está disponible en este momento.'); }
                 return 'La IA no está disponible en este momento. Te comparto la ayuda básica:\n\n' + getFallbackResponse(question);
             }
@@ -6498,6 +6503,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 
 
 

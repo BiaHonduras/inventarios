@@ -14,7 +14,7 @@ Deno.serve(async request => {
   if (!/^Bearer\s+\S+$/i.test(token)) return respond({ error: 'Inicia sesión nuevamente' }, 401);
   try {
     const client = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '', { global: { headers: { Authorization: token } }, auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: auth, error: authError } = await client.auth.getUser();
+    const { data: auth, error: authError } = await client.auth.getUser(token.replace(/^Bearer\s+/i, ''));
     if (authError || !auth.user) return respond({ error: 'Inicia sesión nuevamente' }, 401);
     const { data: profile, error: profileError } = await client.rpc('bia_profile');
     if (profileError || !profile?.is_active || !Array.isArray(profile.applications) || !profile.applications.includes('inventarios')) return respond({ error: 'No tienes acceso a Inventarios' }, 403);

@@ -213,13 +213,20 @@
             }
 
             async function getAssistantResponse(question) {
-                // La ayuda local funciona aunque el servicio de IA no esté configurado.
-                return getFallbackResponse(question);
+                try {
+                    const { data, error } = await window.supabase.functions.invoke('assistant-inventario', {
+                        body: { question: String(question).trim() }
+                    });
+                    if (!error && typeof data?.answer === 'string' && data.answer.trim()) return data.answer.trim();
+                    if (error?.context?.status === 429) return 'Has alcanzado el límite temporal de consultas. Espera un minuto e inténtalo de nuevo.';
+                } catch (error) { console.warn('La ayuda con IA no está disponible en este momento.'); }
+                return 'La IA no está disponible en este momento. Te comparto la ayuda básica:\n\n' + getFallbackResponse(question);
             }
 
             async function processAssistantQuestion(question) {
                 const texto = String(question || '').trim();
                 if (!texto || assistantBusy) return;
+                if (texto.length > 800) { addAssistantMessage('Escribe una pregunta de hasta 800 caracteres.', 'bot', 'assistant-error'); return; }
 
                 addAssistantMessage(texto, 'user');
                 setAssistantBusy(true);
@@ -6180,7 +6187,7 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
 
         <div id="assistantBody" class="assistant-body">
             <div class="assistant-message bot">
-                Hola. Puedo orientarte con instrucciones sobre el sistema. Esta ayuda usa respuestas predeterminadas.
+                Hola. Puedo orientarte sobre el sistema. Tu pregunta se enviará a OpenAI; evita incluir contraseñas, datos personales o información confidencial. Si la IA no está disponible, usaré ayuda básica.
             </div>
 
             <div class="assistant-message bot">
@@ -6491,5 +6498,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 
 

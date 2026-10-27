@@ -21,6 +21,7 @@
 	<script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
@@ -116,11 +117,11 @@
                     answer: `DIF es la diferencia entre lo esperado en reportería y lo contado físicamente. Sirve para detectar faltantes, sobrantes o pendientes por justificar.`
                 },
                 {
-                    keywords: ['escáner', 'scanner', 'cámara', 'código de barra'],
+                    keywords: ['escáner', 'scanner', 'cámara', 'código de barra', 'qr'],
                     answer: `Para usar el escáner:
-					1. Presiona el botón "Escáner".
+					1. Selecciona "Escanear código de barras" o "Escanear QR".
 					2. Permite acceso a la cámara.
-					3. Coloca el código de barras dentro del recuadro.
+					3. Coloca el código dentro del recuadro.
 					4. Cuando el sistema lo detecte, se llenará el campo correspondiente.
 					5. Si no funciona, puedes escribir el código manualmente.`
                 },
@@ -1348,12 +1349,15 @@
 						</div>
 						
                         <div class="md:col-span-2">
-						    <label class="block text-sm font-medium text-gray-700 mb-2">Códigos de Barra *</label>
+						    <label class="block text-sm font-medium text-gray-700 mb-2">Escanear código de barras o QR</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						    <button type="button" id="startScannerBtn"
 						        class="btn-primary w-full px-4 py-3 rounded-lg text-white">
 						        <i class="fas fa-barcode mr-2"></i>
-						        Escáner
+						        Escanear código de barras
 						    </button>
+                            <button type="button" id="startQrScannerBtn" class="btn-primary w-full px-4 py-3 rounded-lg text-white"><i class="fas fa-qrcode mr-2"></i>Escanear QR</button>
+                            </div>
 						</div>
 
                         <div id="scanner-area" class="md:col-span-2 hidden">
@@ -1371,6 +1375,11 @@
                             </button>
                         </div>
                         
+                        <div id="qr-scanner-area" class="md:col-span-2 hidden">
+                            <p id="qr-status" class="text-sm mb-2" role="status">Centre el código QR en la cámara.</p>
+                            <div id="qr-scanner" class="w-full bg-black rounded-lg overflow-hidden"></div>
+                            <button type="button" id="stopQrScannerBtn" class="w-full mt-3 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Detener escáner QR</button>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor</label>
                             <input type="text" id="proveedor" 
@@ -1450,10 +1459,7 @@
                             <input type="text" id="codigoBarra"
                                     class="input-field w-full px-4 py-3 rounded-lg"
        								placeholder="Escanee o ingrese manualmente"
-       								maxlength="20"
-       								autocomplete="off"
-       								inputmode="numeric"
-       								pattern="[0-9]*">
+                                    autocomplete="off">
                         </div>
 						
                         <div>
@@ -2773,6 +2779,8 @@
             // Scanner buttons
             document.getElementById('startScannerBtn').addEventListener('click', startScanner);
             document.getElementById('stopScannerBtn').addEventListener('click', stopScanner);
+            document.getElementById('startQrScannerBtn').addEventListener('click', startQrScanner);
+            document.getElementById('stopQrScannerBtn').addEventListener('click', stopQrScanner);
 
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
@@ -2834,15 +2842,7 @@
     				}
 			});
 			
-			barraInput.addEventListener('input', function () {
-    			this.value = this.value.replace(/\D/g, '');
-
-    				if (this.value.length >= 13) {
-        				this.setCustomValidity('');
-   					} else {
-        				this.setCustomValidity('Código de barra inválido');
-    				}
-				});
+            barraInput.addEventListener('input', function () { this.setCustomValidity(''); });
 
 			let timeoutBusqueda;
 
@@ -3476,11 +3476,14 @@
         // Barcode Scanner Functions
         let lastScanned = null;
         let scanning = false;
+        let barcodeStarting = false;
         let lastScans = [];
         const REQUIRED_MATCHES = 4;
         const SCAN_TARGET_LENGTH = 13;
 
         async function startScanner() {
+            if (barcodeStarting || scanning) return;
+            if (qrReader || qrStartPromise) await stopQrScanner();
             const area = document.getElementById('scanner-area');
             const scannerDiv = document.getElementById('scanner');
 
@@ -3506,6 +3509,7 @@
 
             Quagga.offDetected(handleDetection);
 
+            barcodeStarting = true;
             Quagga.init({
                 inputStream: {
                     type: 'LiveStream',
@@ -3526,6 +3530,7 @@
                 numOfWorkers: navigator.hardwareConcurrency ? Math.min(4, navigator.hardwareConcurrency) : 2,
                 frequency: 10
             }, function(err) {
+                barcodeStarting = false;
                 if (err) {
                     console.error('QUAGGA ERROR:', err);
                     showNotification('Error', 'Error iniciando cámara', 'error');
@@ -3629,6 +3634,72 @@
             lastScanned = null;
             lastScans = [];
         }
+
+        // QR conserva el contenido leído y no requiere que esté registrado para colocarlo en el campo.
+        let qrReader = null, qrStartPromise = null, qrStopPromise = null, qrHandled = false;
+        async function stopQrScanner() {
+            if (qrStopPromise) return qrStopPromise;
+            const reader = qrReader;
+            qrHandled = true;
+            qrStopPromise = (async () => {
+                try {
+                    if (qrStartPromise) await qrStartPromise.catch(() => {});
+                    if (reader?.isScanning) await reader.stop();
+                    if (reader) reader.clear();
+                } catch (error) { console.warn('No se pudo detener el escáner QR:', error); }
+                finally {
+                    qrReader = null; qrStartPromise = null;
+                    document.getElementById('qr-scanner-area').classList.add('hidden');
+                    document.getElementById('startQrScannerBtn').disabled = false;
+                    document.getElementById('startScannerBtn').disabled = false;
+                }
+            })();
+            try { await qrStopPromise; } finally { qrStopPromise = null; }
+        }
+        async function startQrScanner() {
+            if (qrReader || qrStartPromise || qrStopPromise) return;
+            if (barcodeStarting) { showNotification('Escáner', 'Espera a que termine de iniciar la cámara.', 'warning'); return; }
+            if (scanning) stopScanner();
+            const area = document.getElementById('qr-scanner-area');
+            const status = document.getElementById('qr-status');
+            area.classList.remove('hidden'); status.textContent = 'Iniciando cámara...';
+            if (!navigator.mediaDevices?.getUserMedia || typeof Html5Qrcode === 'undefined') {
+                status.textContent = 'La cámara o el lector QR no están disponibles. Puedes ingresar el código manualmente.';
+                showNotification('Escáner QR', status.textContent, 'error'); return;
+            }
+            document.getElementById('startQrScannerBtn').disabled = true;
+            document.getElementById('startScannerBtn').disabled = true;
+            qrHandled = false;
+            try {
+                qrReader = new Html5Qrcode('qr-scanner', { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
+                qrStartPromise = qrReader.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 240, height: 240 } }, async decoded => {
+                    if (qrHandled || typeof decoded !== 'string' || !decoded.trim()) return;
+                    if (/[\r\n]/.test(decoded)) { status.textContent = 'El QR contiene varias líneas y no cabe en este campo.'; return; }
+                    qrHandled = true;
+                    const value = decoded;
+                    const field = document.getElementById('codigoBarra');
+                    field.value = value; field.setCustomValidity('');
+                    await stopQrScanner();
+                    if (/^\d+$/.test(value) && document.getElementById('sede').value && document.getElementById('idBodega').value) {
+                        try { await buscarArticulo(value, { mostrarMensajes: false }); }
+                        catch (error) { console.warn('No se pudo consultar el artículo:', error); }
+                        field.value = value; field.setCustomValidity('');
+                    }
+                    field.focus();
+                    showNotification('QR leído', 'El valor se colocó en Código de Barra Artículo.', 'success');
+                }, () => {});
+                await qrStartPromise;
+                if (!qrHandled) status.textContent = 'Centre el código QR en la cámara.';
+            } catch (error) {
+                console.warn('No se pudo iniciar el escáner QR:', error);
+                await stopQrScanner();
+                showNotification('Escáner QR', 'No se pudo abrir la cámara. Revisa sus permisos e inténtalo de nuevo.', 'error');
+            }
+        }
+        window.addEventListener('pagehide', () => { if (qrReader) stopQrScanner(); });
+        document.querySelectorAll('.nav-item[data-section]').forEach(link => link.addEventListener('click', () => {
+            if (link.dataset.section !== 'inventario-diario' && qrReader) stopQrScanner();
+        }));
 
         function importarReporteria() {
 
@@ -6502,6 +6573,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </body>
 </html>
+
 
 
 

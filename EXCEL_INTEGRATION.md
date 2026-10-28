@@ -27,7 +27,7 @@ are intentional for this API: bodies authorize access and table access is denied
 - Operative article code remains the existing integer key; raw textual codes and
   all 19 original fields remain in the private staged payload. Duplicate normalized
   article + warehouse keys are rejected (including multiple societies).
-- Masterpack accepts nonnegative integers, including source zero.
+- Masterpack accepts nonnegative integers or NULL when absent in the source. The preview reports missing Masterpack; total units do not depend on it.
 - One source date; commit only on the current Honduras date.
 - Only included warehouses are replaced. No unrelated warehouse is cleared.
 - A transaction lock prevents two baseline imports from interleaving. A counts

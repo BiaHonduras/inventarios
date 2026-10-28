@@ -29,6 +29,7 @@ REGLAS
 - Solo se incluyen bodegas configuradas en public.bodegas.
 - Una bodega configurada sin permisos genera error, no se omite silenciosamente.
 - Cantidades son unidades totales: no se multiplican por Masterpack.
+- Masterpack vacio se conserva como desconocido (NULL) y se cuenta en el resumen.
 - Los decimales de Cantidades se guardan como numeric, sin redondeo a entero.
 - Se conservan las 19 columnas originales en la carga pendiente privada;
   la tabla operativa recibe los campos que utiliza actualmente la aplicacion.

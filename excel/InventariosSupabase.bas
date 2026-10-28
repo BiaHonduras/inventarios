@@ -22,10 +22,18 @@ Public Sub ActualizarYEnviarInventarios()
     If tabla Is Nothing Then Set tabla = ws.ListObjects("INVENTARIOS")
     On Error GoTo Fallo
     If tabla Is Nothing Then Err.Raise vbObjectError + 1, , "No se encontro la tabla FACTS62 o INVENTARIOS en DATA."
-    nombres = Split("Bodega|CodArticulo|CodDescrip|ClaseArticulo|CafeRep|CostoActual|Cantidades|Fecha|Masterpack|Marca|Proveedor|ExistenciaCajasFardos|VentasCajasFardos|LbReales|ProductoVenta|Categoria|Familia|Libras|Sociedad", "|")
+    nombres = Split("Bodega|CodArticulo|CodDescrip|ClaseArticulo|CafeRep|CostoActual|Cantidades|Fecha|Masterpack|Marca|Proveedor|ExistenciaCajasFardos|VentasCajasFardos|LbReales|ProductoVenta|Categoria|Familia|Libras|Sociedad|Código de Barra", "|")
     ReDim campos(0 To UBound(nombres))
     For j = 0 To UBound(nombres)
-        campos(j) = tabla.ListColumns(CStr(nombres(j))).Index
+        If CStr(nombres(j)) = "Código de Barra" Then
+            ' Optional for compatibility with the original 19-column workbook.
+            On Error Resume Next
+            campos(j) = 0
+            campos(j) = tabla.ListColumns(CStr(nombres(j))).Index
+            On Error GoTo Fallo
+        Else
+            campos(j) = tabla.ListColumns(CStr(nombres(j))).Index
+        End If
     Next j
     Set qt = tabla.QueryTable
     If qt Is Nothing Then Err.Raise vbObjectError + 2, , "La tabla no tiene conexion SQL. No se enviaron datos."
@@ -36,12 +44,17 @@ Public Sub ActualizarYEnviarInventarios()
     If qt.Refreshing Then Err.Raise vbObjectError + 4, , "La consulta sigue actualizandose. Espera a que termine."
     If tabla.DataBodyRange Is Nothing Then Err.Raise vbObjectError + 5, , "La consulta no devolvio registros."
     If tabla.ListRows.Count > 20000 Then Err.Raise vbObjectError + 6, , "La carga supera 20,000 registros."
+    ws.Calculate
     filas = tabla.DataBodyRange.Value2
     ReDim rowJson(1 To UBound(filas, 1))
     ReDim cellJson(0 To UBound(nombres))
     For i = 1 To UBound(filas, 1)
         For j = 0 To UBound(nombres)
-            valor = filas(i, campos(j))
+            If campos(j) = 0 Then
+                valor = Empty
+            Else
+                valor = filas(i, campos(j))
+            End If
             If IsError(valor) Then Err.Raise vbObjectError + 7, , "Fila " & i & ": hay un error de Excel en " & nombres(j)
             Select Case CStr(nombres(j))
                 Case "Bodega"
@@ -57,6 +70,12 @@ Public Sub ActualizarYEnviarInventarios()
                         If Not IsNumeric(valor) Then Err.Raise vbObjectError + 9, , "Fila " & i & ": valor numerico no valido en " & nombres(j)
                         cellJson(j) = JString(CStr(nombres(j))) & ":" & Replace(CStr(CDec(valor)), Application.International(xlDecimalSeparator), ".")
                     End If
+                Case "Código de Barra"
+                    If VarType(valor) <> vbString And IsNumeric(valor) Then
+                        If CDbl(valor) < 0 Or CDbl(valor) <> Fix(CDbl(valor)) Or CDbl(valor) >= 10 ^ 15 Then Err.Raise vbObjectError + 14, , "Fila " & i & ": guarda Codigo de Barra como texto para evitar perdida de digitos."
+                        valor = Format$(valor, "0")
+                    End If
+                    cellJson(j) = JString(CStr(nombres(j))) & ":" & JString(Trim$(CStr(valor)))
                 Case Else
                     cellJson(j) = JString(CStr(nombres(j))) & ":" & JString(CStr(valor))
             End Select

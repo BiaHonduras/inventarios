@@ -5,8 +5,8 @@ The workbook is not published. Install the module from `excel/InventariosSupabas
 into the original Windows Excel workbook. See `excel/INSTALACION.txt`.
 
 ## Data flow
-The foreground SQL QueryTable refresh must succeed before sending. VBA reads all
-19 named columns in DATA / FACTS62 (fallback table name INVENTARIOS), serializes
+The foreground SQL QueryTable refresh must succeed before sending. VBA reads the original
+19 named columns and optional `Código de Barra` in DATA / FACTS62 (fallback table name INVENTARIOS), serializes
 UTF-8 JSON and stages it via REST. No stored user passwords or service role keys.
 An authenticated Inventarios writer generates a random one-use pass, valid for
 30 minutes. Only its SHA-256 digest is stored. Only one unreceived pass is active
@@ -25,7 +25,7 @@ are intentional for this API: bodies authorize access and table access is denied
 - Configured but unauthorized warehouses reject the batch.
 - Cantidades is total units, preserved as numeric; no multiplication by Masterpack.
 - Operative article code remains the existing integer key; raw textual codes and
-  all 19 original fields remain in the private staged payload. Duplicate normalized
+  all original fields remain in the private staged payload. Duplicate normalized
   article + warehouse keys are rejected (including multiple societies).
 - Masterpack accepts nonnegative integers or NULL when absent in the source. The preview reports missing Masterpack; total units do not depend on it.
 - One source date; commit only on the current Honduras date.
@@ -54,3 +54,5 @@ single-use rejection, followed by ROLLBACK. No production inventory was imported
 VBA was reviewed statically, not executed: Windows Excel, SQL refresh, corporate
 macro policy and outbound HTTPS require a real test on the user's BIA computer.
 No original XLSM was rewritten, preserving its SQL connections and links.
+
+Barcode extension: optional exact header `Código de Barra`, persisted to `codigo_barra` as text (NULL when absent/empty). Up to 100 characters, no control characters. VBA refuses numeric barcodes of 16+ digits; source lookup formulas must return text to preserve leading zeros. No existing inventories are backfilled or overwritten by this change.

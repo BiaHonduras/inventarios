@@ -52,3 +52,15 @@ VERIFICACION PENDIENTE EN TU EQUIPO
 Las funciones de base de datos y la logica web se prueban por separado.
 La ejecucion real de VBA, el refresco SQL y el envio a traves de la red BIA
 requieren Excel de escritorio en tu equipo. No se han ejecutado desde aqui.
+
+ACTUALIZACION: CODIGO DE BARRA
+Agrega la columna con el encabezado exacto "Código de Barra" dentro de la tabla,
+no como una columna externa. Puede ser una formula de busqueda; si Excel no la
+conserva al refrescar SQL, configura la tabla para conservar las columnas calculadas.
+La formula debe devolver texto para conservar ceros iniciales y codigos largos.
+No uses solo un formato visual de ceros sobre un valor numerico: eso no conserva
+el valor original. Evita #N/A; devuelve texto vacio cuando no haya coincidencia.
+La columna es opcional; vacia o ausente se guarda como NULL en codigo_barra.
+Para actualizar VBA: Alt+F11 > elimina el modulo InventariosSupabase anterior
+(solo ese modulo) e importa la nueva descarga. No importes ambos modulos a la vez.
+La macro ActualizarYEnviarInventarios mantiene el nombre y la asignacion del boton.

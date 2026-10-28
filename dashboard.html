@@ -1016,6 +1016,7 @@
     				<i class="fas fa-exclamation-triangle"></i>
     				Justificaciones
 				</a>
+                <a href="cierre-dia.html" class="nav-item"><i class="fas fa-calendar-check"></i> Cierre e Histórico</a>
                 <a href="#exportar" class="nav-item" data-section="exportar">
                     <i class="fas fa-file-export"></i>
                     Exportación Informe
@@ -4044,20 +4045,20 @@ function normalizarNombreColumnaCSV(nombre = '') {
                     const [fecha,proveedor,codigo_barra,codigo,descripcion,stock,pack,idBodega] = row.map(limpiarValor);
                     const inventory = Number(stock || 0), masterpack = Number(pack || 1);
                     const warehouse = /^\d{1,3}$/.test(idBodega) ? idBodega.padStart(3,'0') : idBodega;
-                    if(!codigo || !/^\d+$/.test(codigo) || Number(codigo)>2147483647 || !descripcion || codigo_barra.length>100 || !Number.isInteger(inventory) || Math.abs(inventory)>2147483647 || !Number.isInteger(masterpack) || masterpack<=0 || masterpack>2147483647)
-                        throw new Error(`Fila ${index+2}: revisa código, descripción y cantidades enteras sin separador de miles.`);
+                    if(!codigo || !/^\d+$/.test(codigo) || Number(codigo)>2147483647 || !descripcion || codigo_barra.length>100 || !Number.isFinite(inventory) || Math.abs(inventory)>1000000000000 || !Number.isInteger(masterpack) || masterpack<=0 || masterpack>2147483647)
+                        throw new Error(`Fila ${index+2}: revisa código, descripción, existencia numérica y masterpack entero sin separador de miles.`);
                     if (!(window.bodegasData || []).some(b => b.id_bodega === warehouse)) throw new Error(`Fila ${index+2}: bodega no disponible para esta cuenta.`);
                     let date; try { date=window.inventoryTools.inventoryDate(fecha); } catch(error) { throw new Error(`Fila ${index+2}: ${error.message}`); }
                     return {fecha:date,proveedor,codigo_barra,codigo,descripcion,inventario_reporteria:inventory,masterpack,idBodega:warehouse};
                 });
-                // Compatibility path until the atomic RPC migration can be applied.
-                const {error: clearError} = await supabase.rpc('rpc_limpiar_inventario_reporteria_segura',{p_usuario:getUsuarioActual()});
-                if (clearError) throw clearError;
-                const {error: insertError} = await supabase.from('inventario_reporteria').insert(registros);
-                if (insertError) throw insertError;
-                const {error: logError} = await supabase.from('inventario_importaciones').insert([{usuario:getUsuarioActual(),fecha_importacion:new Date().toISOString(),cantidad_registros:registros.length,tipo_importacion:'inventario'}]);
-                if (logError) console.warn('La importación se completó sin poder guardar su historial:',logError);
-                const data={registros:registros.length};
+                // Same atomic, date and closed-day guards as the Excel bridge.
+                const pass = await supabase.rpc('excel_inventory_pass');
+                if (pass.error) throw pass.error;
+                const staged = await supabase.rpc('excel_inventory_receive', {p_codigo:pass.data.codigo,p_registros:registros.map(r=>({Bodega:r.idBodega,CodArticulo:String(r.codigo),CodDescrip:r.descripcion,Proveedor:r.proveedor,Fecha:r.fecha,Cantidades:r.inventario_reporteria,Masterpack:r.masterpack,'Código de Barra':r.codigo_barra}))});
+                if (staged.error) throw staged.error;
+                const committed = await supabase.rpc('excel_inventory_apply',{p_id:pass.data.id,p_confirmar:true});
+                if (committed.error) throw committed.error;
+                const data={registros:committed.data.incluidos};
                 window.inventoryReadCache.clear();
                 input.value = '';
                 document.getElementById('inventoryPreview').classList.add('hidden');

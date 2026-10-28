@@ -4049,14 +4049,8 @@ function normalizarNombreColumnaCSV(nombre = '') {
                     let date; try { date=window.inventoryTools.inventoryDate(fecha); } catch(error) { throw new Error(`Fila ${index+2}: ${error.message}`); }
                     return {fecha:date,proveedor,codigo_barra,codigo,descripcion,inventario_reporteria:inventory,masterpack,idBodega:warehouse};
                 });
-                // Compatibility path until the atomic RPC migration can be applied.
-                const {error: clearError} = await supabase.rpc('rpc_limpiar_inventario_reporteria_segura',{p_usuario:getUsuarioActual()});
-                if (clearError) throw clearError;
-                const {error: insertError} = await supabase.from('inventario_reporteria').insert(registros);
-                if (insertError) throw insertError;
-                const {error: logError} = await supabase.from('inventario_importaciones').insert([{usuario:getUsuarioActual(),fecha_importacion:new Date().toISOString(),cantidad_registros:registros.length,tipo_importacion:'inventario'}]);
-                if (logError) console.warn('La importación se completó sin poder guardar su historial:',logError);
-                const data={registros:registros.length};
+                const {data,error} = await supabase.rpc('rpc_importar_inventario_reporteria',{p_registros:registros});
+                if(error || !data?.ok) throw error || new Error('No se pudo importar el inventario.');
                 window.inventoryReadCache.clear();
                 input.value = '';
                 document.getElementById('inventoryPreview').classList.add('hidden');

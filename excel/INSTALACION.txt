@@ -1,0 +1,53 @@
+CONEXION EXCEL - INVENTARIOS BIA
+
+INSTALACION UNA SOLA VEZ (Excel de escritorio para Windows)
+1. Guarda una copia de respaldo de Inventarios.xlsm.
+2. Abre tu libro original, con su conexion SQL, desde la red BIA.
+3. Descarga InventariosSupabase.bas desde la pagina Conectar Excel.
+4. Presiona Alt+F11. En el panel izquierdo selecciona VBAProject (Inventarios.xlsm).
+5. Menu Archivo > Importar archivo... > selecciona InventariosSupabase.bas.
+6. Regresa a Excel con Alt+F11 y guarda el libro como .xlsm.
+7. En Desarrollador > Insertar > Boton (control de formulario), dibuja un boton
+   fuera de la tabla DATA. Asigna ActualizarYEnviarInventarios.
+   Texto recomendado: Actualizar y Enviar a Inventarios.
+   Tambien puedes ejecutarla con Alt+F8 sin agregar boton.
+No necesitas activar acceso de confianza al modelo de proyectos VBA.
+Si BIA bloquea macros o HTTPS, solicita habilitacion a TI; no desactives las
+politicas corporativas ni la proteccion de macros de forma general.
+
+USO DIARIO
+1. Abre Excel de escritorio estando conectado a la red BIA.
+2. Ejecuta ActualizarYEnviarInventarios. Espera la actualizacion SQL.
+3. Se abrira Conectar Excel. Inicia sesion desde la Intranet si hace falta.
+4. Genera un codigo temporal, copialo y pegalo en la ventana de Excel.
+5. Excel envia la tabla a una carga pendiente. No reemplaza existencias todavia.
+6. En la web pulsa Actualizar cargas > Validar y ver resumen.
+7. Revisa fecha, bodegas, incluidos y omitidos. Pulsa Confirmar importacion.
+
+REGLAS
+- La hoja es DATA. Tabla original FACTS62; conexion SQL INVENTARIOS.
+- Solo se incluyen bodegas configuradas en public.bodegas.
+- Una bodega configurada sin permisos genera error, no se omite silenciosamente.
+- Cantidades son unidades totales: no se multiplican por Masterpack.
+- Los decimales de Cantidades se guardan como numeric, sin redondeo a entero.
+- Se conservan las 19 columnas originales en la carga pendiente privada;
+  la tabla operativa recibe los campos que utiliza actualmente la aplicacion.
+- CodArticulo se conserva textual en el original. El catalogo operativo actual
+  usa codigo entero; si dos codigos solo se distinguen por ceros iniciales,
+  la validacion detectara un duplicado y no importara.
+- La confirmacion solo acepta la fecha actual de Honduras.
+- Se bloquea el reemplazo si hay conteos actuales o anteriores en alguna de
+  las bodegas incluidas. No borres conteos para forzar la importacion:
+  el cierre diario es una etapa posterior, aun no implementada en este flujo.
+- Solo se reemplazan las bodegas incluidas; no se vacian otras bodegas.
+- Las cargas aplicadas son idempotentes: confirmar otra vez no duplica datos.
+- Si falla la confirmacion, la transaccion conserva la base anterior.
+- El codigo temporal dura 30 minutos y solo permite enviar una carga pendiente.
+  Nunca guardes contrasenas ni claves administrativas en el Excel.
+- No se actualiza SQL con el libro cerrado. OneDrive no sustituye la conexion
+  de Excel a la red BIA.
+
+VERIFICACION PENDIENTE EN TU EQUIPO
+Las funciones de base de datos y la logica web se prueban por separado.
+La ejecucion real de VBA, el refresco SQL y el envio a traves de la red BIA
+requieren Excel de escritorio en tu equipo. No se han ejecutado desde aqui.

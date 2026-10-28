@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {inventorySession,siteCode} from '../intranet-session.mjs';
+const user={id:'123',email:'javier@example.com',app_metadata:{}};
+const profile={is_active:true,applications:['inventarios'],sedes:['SPS'],agency:'SPS',nombre_corto:'Javier Hernandez',role:'operador',role_code:'verificador',permissions:{write:true}};
+function client({u=user,p=profile,row={usuario:'javier',sede:'San Pedro Sula',tipo_bodega:null},error=null}={}){return {auth:{getUser:async()=>({data:{user:u}})},rpc:async()=>({data:p,error}),from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:row,error:null})})})})};}
+test('valid session derives identity and permissions from the verified profile',async()=>{const r=await inventorySession(client());assert.equal(r.status,'ok');assert.equal(r.currentUser.nombre_corto,'Javier Hernandez');assert.equal(r.currentUser.sede,'San Pedro Sula');assert.equal(r.currentUser.can_write,true);assert.deepEqual(r.currentUser.sedes,['SPS']);});
+test('intranet session and application assignment are required',async()=>{assert.equal((await inventorySession(client({u:null}))).status,'login');assert.equal((await inventorySession(client({p:{...profile,applications:['tiempos']}}))).status,'denied');assert.equal((await inventorySession(client({p:{...profile,is_active:false}}))).status,'denied');assert.equal((await inventorySession(client({error:{message:'failure'}}))).status,'error');});
+test('password change is required before accessing inventory',async()=>{assert.equal((await inventorySession(client({u:{...user,app_metadata:{must_change_password:true}}}))).status,'password');assert.equal((await inventorySession(client({error:{message:'CAMBIO_PASSWORD_REQUERIDO'}}))).status,'password');});
+test('legacy site cannot override authorized profile sites',async()=>{const r=await inventorySession(client({row:{usuario:'javier',sede:'Tegucigalpa'}}));assert.equal(r.currentUser.sede,'San Pedro Sula');assert.equal(siteCode('Santa Rosa de Copán'),'SRC');});
+test('read only permissions remain read only',async()=>{const r=await inventorySession(client({p:{...profile,role:'consulta',role_code:'consultas',permissions:{write:false,delete:false}}}));assert.equal(r.currentUser.can_write,false);assert.equal(r.currentUser.can_delete,false);});

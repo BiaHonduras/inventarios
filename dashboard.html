@@ -11,7 +11,7 @@
     <link rel="icon" href="https://biahonduras.github.io/devoluciones/favicon.png?v=2" type="image/png">
     
     <!-- Tipografía -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 
 	<!-- Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
@@ -25,50 +25,18 @@
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
-        import { requireInventorySession, siteCode } from './intranet-session.mjs';
+        import { requireInventorySession, siteCode } from './intranet-session.mjs?v=20261028-audit';
+        import * as inventoryTools from './inventory-tools.mjs?v=20261028-audit';
+        window.inventoryTools = inventoryTools;
+        window.inventoryReadCache = inventoryTools.createReadCache();
         window.inventoryAuthReady = requireInventorySession(supabase);
         window.inventorySiteCode = siteCode;
-        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') { sessionStorage.removeItem('currentUser'); location.replace('../control-tiempos/intranet.html'); } });
+        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') { sessionStorage.removeItem('currentUser'); location.replace('/intranet/intranet.html'); } });
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
 
-		window.bodegasData = [];
-		async function cargarBodegas() {
-		    const select = document.getElementById('idBodega');
-		
-		    const { data, error } = await supabase
-		        .from('bodegas')
-		        .select(`
-		            id_bodega,
-		            sede,
-		            nombre,
-		            tipos_bodega (
-		                tipos_bodega,
-		                maneja_vencimiento
-		            )
-		        `)
-		        .order('sede');
-		
-		    if (error) {
-		        console.error('Error cargando bodegas:', error);
-		        return;
-		    }
-			 window.bodegasData = data;
-		
-		    // limpiar opciones actuales
-		    select.innerHTML = '<option value="">Seleccione una bodega</option>';
-		    data.forEach(b => {
-		        const option = document.createElement('option');
-		        option.value = b.id_bodega;
-		        option.textContent = `${b.sede} - ${b.nombre}`;
-		        option.dataset.manejaVencimiento = b.tipos_bodega?.maneja_vencimiento ? 'true' : 'false';
-		        select.appendChild(option);
-		    });
-		}
-		
-		// ejecutar cuando cargue la página
-		document.addEventListener('DOMContentLoaded', cargarBodegas);
-		
+        window.bodegasData = [];
+
         window.initAssistant = function() {
             const fab = document.getElementById('assistantFab');
             const panel = document.getElementById('assistantPanel');
@@ -308,7 +276,7 @@
             --coffee-accent: #2463dc;
 
             --primary-gradient: linear-gradient(135deg, #2463dc 0%, #174cb2 100%);
-            --sidebar-width: 230px;
+            --sidebar-width: 235px;
         }
         
         body {
@@ -961,7 +929,7 @@
         .sidebar { width:235px; background:linear-gradient(170deg,#102b51,#0c203e); box-shadow:none; overflow-y:auto; }
         .main-content { margin-left:235px; width:calc(100% - 235px); }
         .inventory-brand { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
-        .inventory-brand img { width:132px; height:auto; object-fit:contain; }
+        .inventory-brand img { display:block; width:132px; height:48px; object-fit:contain; background:#fff; border-radius:10px; padding:8px; box-sizing:content-box; }
         .inventory-brand span { color:#fff; font-size:10px; font-weight:600; letter-spacing:2px; }
         .intranet-return { color:#aebed3; font-size:12px; text-decoration:none; margin-top:10px; }
         .intranet-return:hover { color:#fff; }
@@ -1518,7 +1486,7 @@
                             <input type="date" id="fechaInventario" class="input-field w-full px-4 py-3 rounded-lg" required>
                         </div>
 
-						<div id="contenedorVencimiento" style="display:block !important; visibility:visible !important;">
+						<div id="contenedorVencimiento" >
 						    <label class="block text-sm font-medium text-gray-700 mb-2">
 						        Fecha Vencimiento *
 						    </label>
@@ -1529,7 +1497,7 @@
 						        disabled
 						    >
 						    <p class="text-xs text-gray-500 mt-2">
-						        Los lunes el campo se habilita automáticamente. En otros días puedes activarlo manualmente usando esta casilla.
+						        En el día configurado el campo se habilita automáticamente, si la bodega permite vencimientos. También puedes activarlo manualmente con la casilla.
 						    </p>
 						</div>
 
@@ -1542,7 +1510,7 @@
 						                <input
 						                    type="checkbox"
 						                    id="checkVencimiento"
-						                    onchange="toggleFechaVencimiento()"
+						                    
 						                    class="mt-1"
 						                >
 						            </div>
@@ -2201,11 +2169,7 @@
         // ===== VARIABLES GLOBALES =====
         let currentUser = null;
         window.currentUser = null;
-        let scannerActive = false;
-        let baseDatosArticulos = JSON.parse(localStorage.getItem('baseDatosArticulos') || '[]');
-        const STORAGE_BACKUP_BUCKET = 'respaldos-sistema';
-        const STORAGE_BACKUP_FOLDER = 'eliminaciones';
-        const HISTORIAL_RESPALDOS_TABLE = 'historial_respaldos';
+
 
         let filtrosGlobales = {
             sede: 'Todas',
@@ -2217,16 +2181,8 @@
         }
 
         function aplicarRestriccionCargaVencimientos() {
-            const boton = document.getElementById('bloqueCargaManualBtn');
-            const modal = document.getElementById('modalCargaManual');
-
-            if (usuarioPuedeGestionarVencimientos()) {
-                boton?.classList.remove('hidden');
-                return;
-            }
-
-            boton?.remove();
-            modal?.remove();
+            const link = document.querySelector('[data-section="depuracion"]');
+            if (link) link.style.display = usuarioPuedeGestionarVencimientos() ? '' : 'none';
         }
 
 
@@ -2259,26 +2215,15 @@
 			
 };
 		window.bodegasPorSede = bodegasPorSede;
-        const mapaTiposBodega = {};
-
-		Object.values(bodegasPorSede).forEach(bodegas => {
-		    bodegas.forEach(bodega => {
-		        if (bodega.label.includes('Principal')) {
-		            mapaTiposBodega[bodega.value] = 'Principal';
-		        } else if (bodega.label.includes('PPV')) {
-		            mapaTiposBodega[bodega.value] = 'PPV';
-		        } else if (bodega.label.includes('PFN')) {
-		            mapaTiposBodega[bodega.value] = 'PFN';
-		        }
-		    });
-		});
-		
 		function obtenerTipoBodegaDesdeId(idBodega) {
 		    const idStr = String(idBodega).trim();
 		    
 		    // Si no hay ID, no asumimos "Principal", lo marcamos como vacío para que el filtro lo maneje
 		    if (!idStr) return "Sin Bodega"; 
 		
+            const stored = (window.bodegasData || []).find(row => String(row.id_bodega).trim() === idStr);
+            const type = stored?.tipos_bodega?.tipos_bodega;
+            if (type) return type.toUpperCase() === 'PRINCIPAL' ? 'Principal' : type;
 		    for (const sede in bodegasPorSede) {
 		        const bodega = bodegasPorSede[sede].find(b => String(b.value).trim() === idStr);
 		        if (bodega) {
@@ -2286,76 +2231,16 @@
 		        }
 		    }
 		    
-		    return "Principal"; // Fallback por defecto si no se encuentra en el mapa
+		    return "Sin Bodega";
 		}
 
-		function obtenerIdBodegaParaFiltro(sedeSeleccionada, tipoBodegaSeleccionada) {
-		    if (!sedeSeleccionada || sedeSeleccionada === "Todas las sedes" || 
-		        !tipoBodegaSeleccionada || tipoBodegaSeleccionada === "Todas las bodegas") {
-		        return null; // Null indica que no se debe restringir por este campo
-		    }
-		    
-		    const listaBodegas = bodegasPorSede[sedeSeleccionada];
-		    if (listaBodegas) {
-		        const bodega = listaBodegas.find(b => b.label === tipoBodegaSeleccionada);
-		        return bodega ? bodega.value : null;
-		    }
-		    return null;
-		}
+		
 
-		function cargarResumenDashboard() {
-		    // 1. Obtener valores de los selects del HTML
-		    const sede = document.getElementById('select-sede').value; // Ej: "San Pedro Sula"
-		    const tipoBodega = document.getElementById('select-tipo-bodega').value; // Ej: "PPV"
 		
-		    // 2. Obtener el ID real que debe buscar en la base de datos
-		    const idBodegaFiltro = obtenerIdBodegaParaFiltro(sede, tipoBodega);
-		
-		    // 3. Construir tu consulta o filtro. 
-		    // Ejemplo si usas una consulta SQL dinámica o llamada a API:
-		    const parametrosConsulta = {
-		        sede: sede === "Todas las sedes" ? null : sede,
-		        idbodega: idBodegaFiltro // Aquí pasas "033" en lugar de "PPV"
-		    };
-		    
-		    // Aquí iría tu llamada fetch() o función de filtrado de array...
-		    // fetch('/api/resumen?' + new URLSearchParams(parametrosConsulta))...
-		}
 
-        function aplicarFiltrosGlobales(data = []) {
-		    return (data || []).filter(item => registroCoincideFiltros(item));
-		}
+        
 
-        function registroCoincideFiltros(item = {}) {
-		    // 1. Normalizar valores del item (evita errores por "Amarateca " vs "Amarateca")
-		    const itemSede = String(item.sede || item.Sede || '').trim().toLowerCase();
-		    const itemIdBodega = String(item.idBodega || item.idbodega || '').trim();
-		
-		    // 2. Obtener valores de los filtros (con fallback a 'Todas' por seguridad)
-		    const sedeFiltro = String(filtrosGlobales?.sede || 'Todas').trim().toLowerCase();
-		    const tipoBodegaFiltro = String(filtrosGlobales?.tipoBodega || 'Todas').trim().toLowerCase();
-		
-		    // 3. Validar Sede
-		    if (sedeFiltro !== 'todas' && itemSede !== sedeFiltro) {
-		        return false;
-		    }
-		
-		    // 4. Validar Tipo de Bodega
-		    if (tipoBodegaFiltro !== 'todas') {
-		        const tipo = obtenerTipoBodegaDesdeId(itemIdBodega);
-				console.log({
-				    idBodega: itemIdBodega,
-				    tipoDetectado: tipo,
-				    filtro: tipoBodegaFiltro
-				});
-				
-		        if (tipo.toLowerCase() !== tipoBodegaFiltro) {
-		            return false;
-		        }
-		    }
-		
-		    return true;
-		}
+        
 
         function filtrarInventarioParaExportacion(data = [], sede = 'Todas', tipoBodega = 'Todas') {
             return (data || []).filter(item => {
@@ -2470,14 +2355,12 @@
 		
 		    filtroSede.addEventListener('change', (e) => {
 		        filtrosGlobales.sede = e.target.value;
-				loadTransitos();
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
 		    });
 		
 		    filtroTipoBodega.addEventListener('change', (e) => {
 		        filtrosGlobales.tipoBodega = e.target.value;
-				loadTransitos();
 		        actualizarLabelFiltrosActivos();
 		        recargarDashboardConFiltros();
 		    });
@@ -2497,67 +2380,7 @@
 		  return rol === 'admin' || rol === 'superadmin';
 		}
 
-		function controlAccesoDepuracion() {
-		    // Usuario autorizado (ajustar según la variable global de sesión del sistema)
-		        const usuarioActual = window.currentUser;  // ✅ usa la variable global
-    			const esAutorizado = esAdmin(usuarioActual);
-		    
-		    // Obtener el usuario actual desde la sesión (ajusta según tu sistema)
-		    // Opciones comunes: localStorage.getItem('usuario'), currentUser, sessionUser, etc.
-		    function obtenerUsuarioActual() {
-		        // Intenta obtener de localStorage (ajusta la clave según tu sistema)
-		        const userStorage = localStorage.getItem('usuario') 
-		                         || localStorage.getItem('currentUser')
-		                         || localStorage.getItem('sessionUser');
-		        if (userStorage) return userStorage;
-		        
-		        // Si tu sistema usa una variable global, descomenta la siguiente línea:
-		        // if (typeof currentUser !== 'undefined') return currentUser;
-		        
-		        return null;
-		    }
-		    
-		    // 1. Mostrar/ocultar enlace en el menú
-		    const linkDepuracion = document.getElementById('link-depuracion');
-		    if (linkDepuracion) {
-		        linkDepuracion.style.display = esAutorizado ? 'block' : 'none';
-		    }
-		    
-		    // 2. Mostrar/ocultar sección completa de Depuración
-		    const seccionDepuracion = document.getElementById('depuracion');
-		    if (seccionDepuracion) {
-		        seccionDepuracion.style.display = esAutorizado ? 'block' : 'none';
-		    }
-		    
-		    // 3. Mostrar/ocultar botones originales en sus secciones
-		    const btnCargaManualVenc = document.getElementById('btn-carga-manual-venc');
-		    const btnEliminarInv = document.getElementById('btn-eliminar-inventario-dia');
-		    const btnEliminarBDD = document.getElementById('btn-eliminar-bdd');
-		    
-		    if (btnCargaManualVenc) btnCargaManualVenc.style.display = esAutorizado ? 'inline-block' : 'none';
-		    if (btnEliminarInv) btnEliminarInv.style.display = esAutorizado ? 'inline-block' : 'none';
-		    if (btnEliminarBDD) btnEliminarBDD.style.display = esAutorizado ? 'inline-block' : 'none';
-		    
-		    // 4. Mostrar avisos informativos a usuarios NO autorizados
-		    if (!esAutorizado) {
-		        const aviso1 = document.getElementById('aviso-carga-manual-vencimientos');
-		        const aviso2 = document.getElementById('aviso-eliminar-inventario');
-		        const aviso3 = document.getElementById('aviso-eliminar-bdd');
-		        if (aviso1) aviso1.style.display = 'block';
-		        if (aviso2) aviso2.style.display = 'block';
-		        if (aviso3) aviso3.style.display = 'block';
-		    }
-		    
-		    // 5. Bloquear acceso directo por URL (hash)
-		    window.addEventListener('hashchange', function() {
-		        if (window.location.hash === '#depuracion' && !esAutorizado) {
-		            alert('⛔ Acceso denegado: solo el usuario "' + USUARIO_AUTORIZADO + '" puede acceder a Depuración.');
-		            window.location.hash = '#resumen';
-		        }
-		    });
-		    
-		    console.log('[Depuración] Usuario actual:', usuarioActual, '| Autorizado:', esAutorizado);
-		}
+		
 
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', async function() {
@@ -2644,30 +2467,6 @@
 		        filtroBodegaVenc.addEventListener('change', loadVencimientosData);
 		    }
 
-			const btnAbrir = document.getElementById('btnAbrirCargaVencimientos');
-		    const modal = document.getElementById('modalCargaManual');
-		    const btnCerrar = document.getElementById('cerrarModalCarga');
-		
-		    if (btnAbrir && modal) {
-		        btnAbrir.addEventListener('click', () => {
-		            modal.classList.remove('hidden');
-		            modal.classList.add('flex');
-		        });
-		    }
-		
-		    if (btnCerrar && modal) {
-		        btnCerrar.addEventListener('click', () => {
-		            modal.classList.add('hidden');
-		            modal.classList.remove('flex');
-		        });
-		    }
-		
-		    modal?.addEventListener('click', (e) => {
-		        if (e.target === modal) {
-		            modal.classList.add('hidden');
-		            modal.classList.remove('flex');
-		        }
-		    });
 
 			const btnGuardarDia = document.getElementById('btnGuardarDiaVencimiento');
 		    const selectDia = document.getElementById('diaVencimientoSelect');
@@ -2694,8 +2493,9 @@
 		    }
 
             
-            // Inicializar navegación
+            // Inicializar navegación y metadatos una sola vez, después de validar la sesión.
             initNavigation();
+            await cargarBodegas();
             cargarResumenCodigos();
 			cargarDiaEnSelector();
 			programarActualizacionVencimientos();
@@ -2711,6 +2511,7 @@
 
 
 			document.getElementById('sede').addEventListener('change', () => {
+			    ++ultimoTokenBusqueda;
 			    actualizarBodegasPorSede();
 			    limpiarCamposArticulo();
 			    document.getElementById('codigoArticulo').value = '';
@@ -2718,6 +2519,7 @@
 			});
 
 			document.getElementById('idBodega').addEventListener('change', () => {
+                ++ultimoTokenBusqueda;
 			    limpiarCamposArticulo();
 			    document.getElementById('codigoArticulo').value = '';
 			    document.getElementById('codigoBarra').value = '';
@@ -2727,11 +2529,8 @@
 			const searchInventory = document.getElementById('searchInventory');
 		    const refreshInventory = document.getElementById('refreshInventory');
 		
-		    if (searchInventory) {
-		        searchInventory.addEventListener('input', function () {
-		            loadInventory();
-		        });
-		    }
+            let inventorySearchTimer;
+            if (searchInventory) searchInventory.addEventListener('input', () => { ++inventoryLoadToken; clearTimeout(inventorySearchTimer); inventorySearchTimer = setTimeout(loadInventory, 250); });
 		
 		    if (refreshInventory) {
 		        refreshInventory.addEventListener('click', function () {
@@ -2779,6 +2578,7 @@
 			initAssistant();
             
             // Configurar formulario de artículo
+            document.getElementById('articuloForm').addEventListener('reset', function(e) { e.preventDefault(); if (!guardandoArticulo) limpiarFormulario(); });
             document.getElementById('articuloForm').addEventListener('submit', function(e) {
 			    e.preventDefault(); // siempre prevenimos el envío tradicional
 			
@@ -2801,11 +2601,7 @@
             });
 
             // Set current date for inventory
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('fechaInventario').value = window.inventoryTools.hondurasDate();
 
             // Scanner buttons
             document.getElementById('startScannerBtn').addEventListener('click', startScanner);
@@ -2816,47 +2612,21 @@
             // Import buttons
             document.getElementById('confirmImportInventory').addEventListener('click', importInventory);
             document.getElementById('confirmImportCodes').addEventListener('click', importCodes);
-            document.getElementById('confirmImportVencimientos')?.addEventListener('click', importVencimientosManual);
-            document.getElementById('btnLimpiarImportVencimientos')?.addEventListener('click', limpiarImportVencimientos);
+            document.getElementById('btn-importar-vencimientos')?.addEventListener('click', importVencimientosManual);
+            document.getElementById('btn-limpiar-vencimientos')?.addEventListener('click', limpiarImportVencimientos);
 
-            const btnAbrirCargaManual = document.getElementById('btnAbrirCargaManual');
-            const modalCargaManual = document.getElementById('modalCargaManual');
-            const cerrarModalCarga = document.getElementById('cerrarModalCarga');
-
-            btnAbrirCargaManual?.addEventListener('click', () => {
-                modalCargaManual?.classList.remove('hidden');
-                modalCargaManual?.classList.add('flex');
-            });
-
-            cerrarModalCarga?.addEventListener('click', () => {
-                modalCargaManual?.classList.add('hidden');
-                modalCargaManual?.classList.remove('flex');
-            });
-
-            modalCargaManual?.addEventListener('click', (e) => {
-                if (e.target === modalCargaManual) {
-                    modalCargaManual.classList.add('hidden');
-                    modalCargaManual.classList.remove('flex');
-                }
-            });
-			
             const btnEliminarGeneral = document.getElementById('btnEliminarGeneral');
 			if (btnEliminarGeneral) {
 			    btnEliminarGeneral.addEventListener('click', eliminarGeneralProtegido);
 			    btnEliminarGeneral.title = 'Realiza respaldo completo antes de eliminar';
 			}
 
-            const btnEliminarBaseCodigos = document.getElementById('btnEliminarBaseCodigos');
+            const btnEliminarBaseCodigos = document.getElementById('btn-eliminar-bdd');
 			if (btnEliminarBaseCodigos) {
 			    btnEliminarBaseCodigos.addEventListener('click', eliminarBaseCodigosProtegida);
 			    btnEliminarBaseCodigos.title = 'Realiza respaldo completo antes de eliminar';
 			}
 
-            const btnImportInv = document.getElementById('confirmImportInventory');
-            if (btnImportInv) btnImportInv.title = 'Deshabilitado temporalmente por seguridad';
-
-            const btnImportCodes = document.getElementById('confirmImportCodes');
-            if (btnImportCodes) btnImportCodes.title = 'Deshabilitado temporalmente por seguridad';
 
 			const codigoInput = document.getElementById('codigoArticulo');
 			const barraInput = document.getElementById('codigoBarra');
@@ -2868,7 +2638,7 @@
         					this.setCustomValidity('');
         					debounceBuscar(e);
     				} else {
-        					this.setCustomValidity('Debe tener al menos 6 dígitos');
+        					++ultimoTokenBusqueda; this.setCustomValidity('Debe tener al menos 6 dígitos');
         					limpiarCamposArticulo();
     				}
 			});
@@ -2887,38 +2657,7 @@
         				buscarArticulo(valor);
     					}, 400);
 					}
-			const fechaVencimiento = document.getElementById('fechaVencimiento');
-			toggleFechaVencimiento();
-			
-			const checkbox = document.getElementById('checkVencimiento');
-		    const inputFecha = document.getElementById('fechaVencimiento');
-		    const diaSemana = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar...
-		
-		    // Función para habilitar/deshabilitar visual y funcionalmente
-		    const toggleFecha = (habilitar) => {
-		        inputFecha.disabled = !habilitar;
-		        if (habilitar) {
-		            inputFecha.classList.remove('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
-		            inputFecha.classList.add('bg-white', 'text-gray-900');
-		        } else {
-		            inputFecha.classList.add('bg-gray-100', 'text-gray-500', 'cursor-not-allowed');
-		            inputFecha.classList.remove('bg-white', 'text-gray-900');
-		            inputFecha.value = ''; // Opcional: limpiar si se desactiva
-		        }
-		    };
-		
-		    // 1. Si es Lunes (1), habilitar automáticamente y marcar checkbox
-		    if (diaSemana === 1) {
-		        checkbox.checked = true;
-				checkbox.disabled = false;
-		        toggleFecha(true);
-		    }
-		
-		    // 2. Control manual con el checkbox
-		    checkbox.addEventListener('change', function() {
-		        toggleFecha(this.checked);
-		        if (this.checked) inputFecha.focus();
-		    });
+            document.getElementById('checkVencimiento').addEventListener('change', toggleFechaVencimiento);
 
 			const btnElimInv = document.getElementById('btn-eliminar-inventario-dia')
 			    if (btnElimInv) {
@@ -2927,34 +2666,7 @@
 				    });
 				}
 			    
-			    // Importar vencimientos CSV
-			    const btnImpVenc = document.getElementById('btn-importar-vencimientos');
 
-				btnImpVenc?.addEventListener('click', () => {
-				    modalCargaManual?.classList.remove('hidden');
-				    modalCargaManual?.classList.add('flex');
-				});
-			    
-			    // Limpiar preview
-			    const btnLimpiar = document.getElementById('btn-depuracion-limpiar-venc');
-			    if (btnLimpiar) {
-			        btnLimpiar.addEventListener('click', function() {
-			            document.getElementById('depuracion-csv-vencimientos').value = '';
-			            document.getElementById('depuracion-preview-vencimientos').innerHTML = '';
-			        });
-			    }
-			    
-			    // Eliminar base de códigos
-			    const btnElimBDD = document.getElementById('btn-eliminar-bdd')
-			    if (btnElimBDD) {
-			        btnElimBDD.addEventListener('click', function() {
-			            if (!confirm('⚠️ ADVERTENCIA: Esta acción eliminará TODA la base de códigos. ¿Continuar?')) return;
-			            if (!confirm('¿Está COMPLETAMENTE seguro? Esta acción no se puede deshacer.')) return;
-			            // TODO: Conectar con la función existente de eliminar base de datos
-			            // eliminarBaseDeCodigos();
-			            alert('Base de códigos eliminada (conectar con la función existente).');
-			        });
-			    }
         });
 
         // ===== NAVEGACIÓN =====
@@ -3034,7 +2746,9 @@
         }
 
         // ===== DASHBOARD =====
+        let dashboardLoadToken = 0;
         async function loadDashboardData() {
+            const run = ++dashboardLoadToken;
 			const sede = document.getElementById('filtroSedeResumen')?.value || 'Todas';
 			const tipoBodega = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
 			const fecha = document.getElementById('filtroFechaResumen')?.value || null;
@@ -3045,7 +2759,8 @@
 			if (sede !== 'Todas') query = query.eq('sede', sede);
 			if (fecha) query = query.eq('fecha', fecha);
 			// El filtro de tipo de bodega se aplica en JS porque depende del mapping de idBodega
-			const { data, error } = await query;
+			const { data, error } = await window.inventoryTools.fetchAllRows(() => query.order('id'));
+            if (run !== dashboardLoadToken) return;
 
 			if (error) {
 				console.error('Error cargando datos para dashboard:', error);
@@ -3075,8 +2790,8 @@
 			document.getElementById('ultimaActualizacion').textContent = ultimaFecha ? formatearFecha(ultimaFecha) : '-';
 
 			// Cargar artículos recientes y gráfico con el mismo filtro
-			await cargarArticulosRecientes(sede, tipoBodega, fecha);
-			await cargarGraficoProveedores(sede, tipoBodega, fecha);
+			await cargarArticulosRecientes(inventario);
+			await cargarGraficoProveedores(inventario);
 
 			actualizarLabelFiltrosActivos('resumen');
 		}
@@ -3124,8 +2839,7 @@
 		        if (mostrarMensajes) showNotification('Error', 'Seleccione sede y bodega', 'error');
 		        return null;
 		    }
-		
-		    console.log('🔍 Buscando código (solo dígitos):', codigoNumerico);
+
 		
 		    // 1. Buscar en inventario_reporteria (con idBodega)
 		    let query = supabase
@@ -3133,18 +2847,8 @@
 		        .select('*')
 		        .eq('idBodega', idBodega);
 		
-		    // Usamos una condición con OR para comparar los campos normalizados
-		    // Nota: no podemos usar funciones SQL directamente, pero podemos traer todos los registros y filtrar en JS
-		    // Para evitar traer muchos, mejor usamos ilike con el código sin ceros a la izquierda
-		    // Como es numérico, podemos buscar tanto con ceros como sin ellos
-		    const codigoSinCeros = codigoNumerico.replace(/^0+/, '');
-		    const codigoConCeros = codigoNumerico.padStart(13, '0'); // para EAN-13
-		
-		    // Opción más robusta: buscar con like (no exacto) para cubrir variaciones
-		    // Pero mejor usamos .or con condiciones que coincidan exactamente después de normalizar en JS
-		    // Para no complicar, traemos los datos y filtramos en memoria (si la tabla es grande, esto podría ser lento)
-		    // Pero por ahora, asumimos que la cantidad de registros por bodega no es enorme.
-		    let { data, error } = await query;
+		    // La caché es temporal; la lectura paginada conserva coincidencias normalizadas.
+		    let { data, error } = await window.inventoryReadCache.get(`reporteria:${idBodega}`, () => window.inventoryTools.fetchAllRows(() => query.order('codigo')));
 		    if (token !== ultimoTokenBusqueda) return null;
 		
 		    if (error) {
@@ -3155,19 +2859,17 @@
 		    }
 		
 		    // Filtramos en memoria normalizando ambos campos
-		    let item = data.find(row => {
+		    let item = (data || []).find(row => {
 		        const codigoRow = String(row.codigo || '').replace(/\D/g, '');
 		        const barraRow = String(row.codigo_barra || '').replace(/\D/g, '');
 		        return codigoRow === codigoNumerico || barraRow === codigoNumerico;
 		    });
-		
-		    console.log('📦 Resultado en reporteria (filtrado):', item);
+
 		
 		    // Si no se encontró en reporteria, buscar en codigos (sin filtro de bodega)
 		    if (!item) {
-		        let { data: dataCodigos, error: errorCodigos } = await supabase
-		            .from('codigos')
-		            .select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo');
+		        let { data: dataCodigos, error: errorCodigos } = await window.inventoryReadCache.get('catalogo', () => window.inventoryTools.fetchAllRows(() => supabase
+		            .from('codigos').select('codigo, codigo_barra, proveedor, descripcion, masterpack, costo').order('codigo')));
 		        if (token !== ultimoTokenBusqueda) return null;
 		
 		        if (errorCodigos) {
@@ -3178,13 +2880,12 @@
 		        }
 		
 		        // Filtramos en memoria
-		        let itemBase = dataCodigos.find(row => {
+		        let itemBase = (dataCodigos || []).find(row => {
 		            const codigoRow = String(row.codigo || '').replace(/\D/g, '');
 		            const barraRow = String(row.codigo_barra || '').replace(/\D/g, '');
 		            return codigoRow === codigoNumerico || barraRow === codigoNumerico;
 		        });
-		
-		        console.log('📦 Resultado en codigos (filtrado):', itemBase);
+
 		
 		        if (itemBase) {
 		            item = {
@@ -3254,6 +2955,7 @@
 		}
 
         function limpiarFormulario() {
+            ++ultimoTokenBusqueda;
     		document.getElementById('codigoArticulo').value = '';
     		document.getElementById('codigoBarra').value = '';
     		document.getElementById('proveedor').value = '';
@@ -3275,13 +2977,10 @@
             window.editandoId = null;
 			window.costoUnitarioActual = 0;
     		window.costoTotalActual = 0;
-			toggleFechaVencimiento();
+            document.getElementById('checkVencimiento').checked = false;
+			evaluarVencimiento();
 
-    		const today = new Date();
-    		const yyyy = today.getFullYear();
-    		const mm = String(today.getMonth() + 1).padStart(2, '0');
-    		const dd = String(today.getDate()).padStart(2, '0');
-    		document.getElementById('fechaInventario').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('fechaInventario').value = window.inventoryTools.hondurasDate();
 		}
 
         async function registrarImportacionVencimientos(cantidadRegistros = 1) {
@@ -3319,49 +3018,11 @@
 		    if (error) throw error;
 		}
 
-        async function eliminarVencimientoSemanal(clave = {}) {
-            const fechaCaptura = clave.fechaCaptura || clave.fecha || null;
+        
 
-            if (!fechaCaptura || !clave.sede || !clave.idBodega || !clave.codigo) return;
-
-            const { data: registrosOrigen, error: errorConsulta } = await supabase
-                .from('vencimientos_semanales')
-                .select('*')
-                .eq('fecha_captura', fechaCaptura)
-                .eq('sede', clave.sede)
-                .eq('idbodega', clave.idBodega)
-                .eq('codigo', clave.codigo);
-
-            if (errorConsulta) {
-                throw errorConsulta;
-            }
-
-            if (!registrosOrigen || !registrosOrigen.length) {
-                return;
-            }
-
-            const { error: errorBackup } = await supabase
-                .from('vencimientos_backup')
-                .insert(registrosOrigen.map(item => ({ ...item })));
-
-            if (errorBackup) {
-                throw new Error(`No se pudo respaldar en vencimientos_backup: ${errorBackup.message}`);
-            }
-
-            const { error: errorDelete } = await supabase
-                .from('vencimientos_semanales')
-                .delete()
-                .eq('fecha_captura', fechaCaptura)
-                .eq('sede', clave.sede)
-                .eq('idbodega', clave.idBodega)
-                .eq('codigo', clave.codigo);
-
-            if (errorDelete) {
-                throw errorDelete;
-            }
-        }
-
+        let guardandoArticulo = false;
         async function agregarArticulo() {
+            if (guardandoArticulo || !currentUser?.can_write || !validarPermiteVencimiento()) return;
 		    const idBodega = document.getElementById('idBodega').value;
 		    const fecha = document.getElementById('fechaInventario').value;
 		    const checkActivo = document.getElementById('checkVencimiento').checked;
@@ -3409,6 +3070,10 @@
 		        costo_unitario: window.costoUnitarioActual || 0
 		    };
 		
+            guardandoArticulo = true;
+            const submit = document.getElementById('btnGuardarArticulo');
+            submit.disabled = true; submit.setAttribute('aria-busy','true');
+            let inventarioGuardado = false;
 		    try {
 		        const estabaEditando = !!window.editandoId;
 		        let idRegistro = window.editandoId || null;
@@ -3430,6 +3095,8 @@
 		            if (errorInsert) throw errorInsert;
 		            idRegistro = inserted?.id || null;
 		        }
+                inventarioGuardado = true;
+                window.editandoId = idRegistro;
 		        if (checkActivo && fechaVenc) {
 		
 		            await guardarVencimientoSemanal({
@@ -3466,22 +3133,11 @@
 		        );
 		    } catch (error) {
 		        console.error('Error guardando artículo/vencimiento:', error);
-		        showNotification('Error', error.message || 'No se pudo guardar el registro', 'error');
-		    }
+                showNotification('Error', inventarioGuardado ? 'El inventario se guardó, pero falta completar el vencimiento. Reintenta sin limpiar el formulario para actualizar el mismo registro.' : (error.message || 'No se pudo guardar el registro'), 'error');
+            } finally { guardandoArticulo = false; submit.disabled = false; submit.removeAttribute('aria-busy'); }
 		}
 
-        function validarEAN13(codigo) {
-            if (!/^\d{13}$/.test(codigo)) return false;
-
-            let suma = 0;
-            for (let i = 0; i < 12; i++) {
-                const num = parseInt(codigo[i], 10);
-                suma += (i % 2 === 0) ? num : num * 3;
-            }
-
-            const digitoVerificador = (10 - (suma % 10)) % 10;
-            return digitoVerificador === parseInt(codigo[12], 10);
-        }
+        
 
         function actualizarEstadoScanner(mensaje = 'Centre el código dentro de la guía') {
             const label = document.getElementById('scannerStatusLabel');
@@ -3515,12 +3171,13 @@
         }
 
         // Barcode Scanner Functions
-        let lastScanned = null;
+
         let scanning = false;
         let barcodeStarting = false;
+        let barcodeSession = 0;
         let lastScans = [];
         const REQUIRED_MATCHES = 4;
-        const SCAN_TARGET_LENGTH = 13;
+
 
         async function startScanner() {
             if (barcodeStarting || scanning) return;
@@ -3546,11 +3203,12 @@
             }
 
             lastScans = [];
-            lastScanned = null;
+
 
             Quagga.offDetected(handleDetection);
 
             barcodeStarting = true;
+            const session = ++barcodeSession;
             Quagga.init({
                 inputStream: {
                     type: 'LiveStream',
@@ -3572,6 +3230,7 @@
                 frequency: 10
             }, function(err) {
                 barcodeStarting = false;
+                if (session !== barcodeSession) { try { Quagga.stop(); } catch (_) {} return; }
                 if (err) {
                     console.error('QUAGGA ERROR:', err);
                     showNotification('Error', 'Error iniciando cámara', 'error');
@@ -3594,7 +3253,7 @@
 		    // ⚠️ IMPORTANTE: QUITÉ el replace(/\D/g, '') para NO eliminar letras
 		    // Ahora toma el código exacto que lee la cámara (alfanumérico)
 		    const code = result?.codeResult?.code?.trim() || '';
-			console.log('🔎 Código escaneado:', code);
+
 			
 		    if (!code) return;
 		
@@ -3616,7 +3275,7 @@
 			}
 		
 		    // Si llegamos aquí, el código fue confirmado
-		    lastScanned = code;
+
 		    scanning = false;
 		    lastScans = [];
 		
@@ -3633,9 +3292,9 @@
 			    // Mostrar el código leído en lugar del mensaje genérico
 			    actualizarEstadoScanner(`Código leído: ${code} - No registrado`);
 			    showNotification('Error', `Código "${code}" no está registrado en la base`, 'error');
-			    console.log('Código escaneado no encontrado:', code);
+
 			    setTimeout(() => {
-			        scanning = true;
+                    if (!document.getElementById('scanner-area').classList.contains('hidden')) scanning = true;
 			        actualizarEstadoScanner('Centre el código dentro de la guía');
 			    }, 1200);
 			    return;
@@ -3657,6 +3316,7 @@
         }
 
         function stopScanner() {
+            ++barcodeSession;
             try {
                 Quagga.offDetected(handleDetection);
                 Quagga.stop();
@@ -3672,7 +3332,7 @@
                 </div>
             `;
             scanning = false;
-            lastScanned = null;
+
             lastScans = [];
         }
 
@@ -3737,49 +3397,17 @@
                 showNotification('Escáner QR', 'No se pudo abrir la cámara. Revisa sus permisos e inténtalo de nuevo.', 'error');
             }
         }
-        window.addEventListener('pagehide', () => { if (qrReader) stopQrScanner(); });
+        window.addEventListener('pagehide', () => { if (qrReader) stopQrScanner(); if (scanning || barcodeStarting) stopScanner(); });
         document.querySelectorAll('.nav-item[data-section]').forEach(link => link.addEventListener('click', () => {
-            if (link.dataset.section !== 'inventario-diario' && qrReader) stopQrScanner();
+            if (link.dataset.section !== 'inventario-diario') { if (qrReader) stopQrScanner(); if (scanning || barcodeStarting) stopScanner(); }
         }));
 
-        function importarReporteria() {
-
-            const archivo = document.getElementById("archivoReporteria").files[0];
-            if (!archivo) {
-            alert("Por favor selecciona un archivo Excel.");
-            return;
-    }
-
-    const lector = new FileReader();
-        lector.onload = function(e) {
-        const datos = new Uint8Array(e.target.result);
-        const libro = XLSX.read(datos, { type: "array" });
-
-        // Asumimos que los datos están en la primera hoja
-        const hoja = libro.Sheets[libro.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(hoja, { defval: "" });
-
-        // Construir diccionario por código de artículo
-        datosReporteria = {};
-        json.forEach(fila => {
-            const codArt = fila["Cod Art"];
-            const descripcion = fila["Cod Descrip"];
-            const cantidad = fila["Cantidad"];
-            if (codArt && cantidad !== "") {
-                datosReporteria[String(codArt).trim()] = {
-                    descripcion: descripcion,
-                    cantidad: parseFloat(cantidad)
-                };
-            }
-        });
-
-        alert("Archivo de Reportería importado correctamente.");
-    };
-    lector.readAsArrayBuffer(archivo);
-}
+        
 
         // ===== VER INVENTARIO =====
+        let inventoryLoadToken = 0;
 		async function loadInventory() {
+            const run = ++inventoryLoadToken;
 		    // 1. Obtener referencias a los elementos del DOM (cache)
 		    const tbody = document.getElementById('inventoryTableBody');
 		    const searchInput = document.getElementById('searchInventory');
@@ -3808,7 +3436,8 @@
 		    }
 		
 		    // 4. Ejecutar la consulta
-		    const { data, error } = await query;
+		    const { data, error } = await window.inventoryTools.fetchAllRows(() => query.order('id'));
+            if (run !== inventoryLoadToken) return;
 		    if (error) {
 		        console.error('Error loadInventory:', error);
 		        tbody.innerHTML = `
@@ -3828,15 +3457,7 @@
 		
 		    // 6. Filtrar por tipo de bodega (en memoria, porque no es una columna directa)
 		    if (tipoBodegaFiltro !== 'Todas') {
-		        const tiposBodega = {
-		            Principal: ['010', '030', '040', '050', '060'],
-		            PPV: ['013', '033', '043', '053', '063'],
-		            PFN: ['015', '045', '095', '096', '099']
-		        };
-		        const codigosPermitidos = tiposBodega[tipoBodegaFiltro] || [];
-		        inventario = inventario.filter(item =>
-		            codigosPermitidos.includes(String(item.idBodega || '').trim())
-		        );
+                inventario = inventario.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodegaFiltro);
 		    }
 		
 		    // 7. Filtrar por término de búsqueda (en memoria)
@@ -3884,11 +3505,15 @@
 		        const skusInventariadosSet = new Set();
 		
 		        // Obtener todos los códigos de la tabla reportería
-		        const { data: dataImportados } = await supabase
-		            .from('inventario_reporteria')
-		            .select('codigo');
+            const { data: dataImportados, error: resumenError } = await window.inventoryTools.fetchAllRows(() => supabase.from('inventario_reporteria').select('codigo,idBodega').order('codigo').order('idBodega'));
+            if (resumenError) throw resumenError;
+            if (run !== inventoryLoadToken) return;
 		
-		        (dataImportados || []).forEach(item => {
+            (dataImportados || []).filter(item => {
+                const warehouse = (window.bodegasData || []).find(b => String(b.id_bodega) === String(item.idBodega));
+                const siteMatches = sede === 'Todas' || (warehouse && window.inventorySiteCode(warehouse.sede) === window.inventorySiteCode(sede));
+                return siteMatches && (tipoBodegaFiltro === 'Todas' || obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodegaFiltro);
+            }).forEach(item => {
 		            const codigo = String(item.codigo || '').trim();
 		            if (codigo) skusImportados.add(codigo);
 		        });
@@ -3914,6 +3539,7 @@
 		        console.error('Error calculando resumen de inventario:', errorResumen);
 		    }
 		
+            if (run !== inventoryLoadToken) return;
 		    // 11. Renderizar la tabla o mensaje de vacío
 		    if (!inventario.length) {
 		        tbody.innerHTML = `
@@ -3970,32 +3596,7 @@
 		    }).join('');
 		}
 
-        function obtenerSemanaReferencia(fecha) {
-            if (!fecha) return null;
-
-            const partes = String(fecha).split('-');
-            if (partes.length !== 3) return null;
-
-            const anio = Number(partes[0]);
-            const mes = Number(partes[1]) - 1;
-            const dia = Number(partes[2]);
-
-            const fechaLocal = new Date(anio, mes, dia);
-            if (Number.isNaN(fechaLocal.getTime())) return null;
-
-            const diaSemana = fechaLocal.getDay();
-            const desfaseLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
-
-            const lunes = new Date(fechaLocal);
-            lunes.setHours(0, 0, 0, 0);
-            lunes.setDate(fechaLocal.getDate() + desfaseLunes);
-
-            const yyyy = lunes.getFullYear();
-            const mm = String(lunes.getMonth() + 1).padStart(2, '0');
-            const dd = String(lunes.getDate()).padStart(2, '0');
-
-            return `${yyyy}-${mm}-${dd}`;
-        }
+        
 
         async function editarArticulo(id) {
 
@@ -4035,6 +3636,7 @@
                     document.getElementById('sede').value = data.sede || '';
                     actualizarBodegasPorSede();
                     document.getElementById('idBodega').value = data.idBodega || '';
+                    await evaluarVencimiento();
 
                     document.getElementById('fechaInventario').value = data.fecha;
                     document.getElementById('codigoArticulo').value = data.codigo;
@@ -4048,6 +3650,8 @@
                     document.getElementById('masterpack').value = data.masterpack;
                     document.getElementById('cajasFardos').value = data.cajas_fardos;
                     document.getElementById('unidades').value = data.unidades;
+                    document.getElementById('codigoBarra').value = data.codigo_barra || '';
+                    document.getElementById('codigoBarra').setCustomValidity('');
 
                     document.getElementById('checkVencimiento').checked = !!fechaVencimientoFinal;
                     toggleFechaVencimiento();
@@ -4091,9 +3695,8 @@
         
 // ===== EXPORTACIÓN INFORME XLSX =====
         async function exportToCSV(sedeFiltro = 'Todas', tipoBodegaFiltro = 'Todas') {
-            const { data, error } = await supabase
-                .from('inventarios_diarios')
-                .select('*');
+            const { data, error } = await window.inventoryTools.fetchAllRows(() => supabase
+                .from('inventarios_diarios').select('*').order('id'));
 
             if (error) {
                 console.error(error);
@@ -4130,9 +3733,8 @@
                 return;
             }
 
-            const { data: justificaciones, error: errorJust } = await supabase
-                .from('inventario_justificaciones')
-                .select('id, codigo, idBodega, sede, justificacion, cantidad_justificada, usuario, fecha_modificacion');
+            const { data: justificaciones, error: errorJust } = await window.inventoryTools.fetchAllRows(() => supabase
+                .from('inventario_justificaciones').select('id, codigo, idBodega, sede, justificacion, cantidad_justificada, usuario, fecha_modificacion').order('id'));
 
             if (errorJust) {
                 console.error(errorJust);
@@ -4140,9 +3742,8 @@
                 return;
             }
 
-            const { data: vencimientos, error: errorVenc } = await supabase
-                .from('vencimientos_semanales')
-                .select('sede, idbodega, codigo, fecha_vencimiento, diasvida');
+            const { data: vencimientos, error: errorVenc } = await window.inventoryTools.fetchAllRows(() => supabase
+                .from('vencimientos_semanales').select('sede, idbodega, codigo, fecha_vencimiento, diasvida').order('sede').order('idbodega').order('codigo'));
 
             if (errorVenc) {
                 console.error(errorVenc);
@@ -4277,19 +3878,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
                 .replace(/^_+|_+$/g, '');
         }
 
-        function convertirCSVATabla(texto = '') {
-            const lineas = String(texto || '')
-                .split(/\r?\n/)
-                .filter(linea => linea.trim() !== '');
-
-            if (!lineas.length) {
-                return { headers: [], rows: [] };
-            }
-
-            const headers = lineas[0].split(',').map(item => item.trim());
-            const rows = lineas.slice(1).map(linea => linea.split(',').map(item => item.trim()));
-            return { headers, rows };
-        }
+        function convertirCSVATabla(texto = '') { return window.inventoryTools.parseCsv(texto); }
 
         function obtenerMapaIndicesCSV(headers = []) {
             const mapa = {};
@@ -4310,65 +3899,16 @@ function normalizarNombreColumnaCSV(nombre = '') {
         }
 
         function limpiarImportVencimientos() {
-            const preview = document.getElementById('vencimientosPreview');
-            const head = document.getElementById('vencimientosPreviewHead');
-            const body = document.getElementById('vencimientosPreviewBody');
-            const fileInput = document.getElementById('importVencimientosFile');
-            const confirmBtn = document.getElementById('confirmImportVencimientos');
-
-            if (preview) preview.classList.add('hidden');
-            if (head) head.innerHTML = '';
-            if (body) body.innerHTML = '';
-            if (fileInput) fileInput.value = '';
-            if (confirmBtn) confirmBtn.disabled = true;
+            document.getElementById('depuracion-csv-vencimientos').value = '';
+            document.getElementById('depuracion-preview-vencimientos').textContent = '';
         }
-
-        function previewVencimientosFile(input) {
-            const file = input.files?.[0];
-            const previewDiv = document.getElementById('vencimientosPreview');
-            const previewHead = document.getElementById('vencimientosPreviewHead');
-            const previewBody = document.getElementById('vencimientosPreviewBody');
-            const confirmBtn = document.getElementById('confirmImportVencimientos');
-
-            if (!file) {
-                limpiarImportVencimientos();
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const { headers, rows } = convertirCSVATabla(e.target.result);
-                const headersNormalizados = headers.map(normalizarNombreColumnaCSV);
-                const requeridas = ['fecha_captura', 'sede', 'idbodega', 'codigo', 'descripcion', 'fecha_vencimiento'];
-                const faltantes = requeridas.filter(col => !headersNormalizados.includes(col));
-
-                if (faltantes.length) {
-                    previewDiv.classList.add('hidden');
-                    confirmBtn.disabled = true;
-                    showNotification('Error', `Faltan columnas requeridas: ${faltantes.join(', ')}`, 'error');
-                    return;
-                }
-
-                const preview = buildSafeTablePreview(headers, rows.slice(0, 5));
-                previewHead.innerHTML = preview.headHtml;
-                previewBody.innerHTML = preview.bodyHtml;
-                previewDiv.classList.remove('hidden');
-                confirmBtn.disabled = rows.length === 0;
-
-                if (!rows.length) {
-                    showNotification('Advertencia', 'El archivo CSV no contiene filas para importar.', 'warning');
-                }
-            };
-            reader.readAsText(file);
-        }
-
         async function importVencimientosManual() {
             if (!usuarioPuedeGestionarVencimientos()) {
                 showNotification('Error', 'No tienes permisos para importar vencimientos', 'error');
                 return;
             }
 
-            const fileInput = document.getElementById('importVencimientosFile');
+            const fileInput = document.getElementById('depuracion-csv-vencimientos');
             const file = fileInput?.files?.[0];
 
             if (!file) {
@@ -4390,11 +3930,14 @@ function normalizarNombreColumnaCSV(nombre = '') {
                         return;
                     }
 
+                    const { data: authData, error: authError } = await supabase.auth.getUser();
+                    if (authError || !authData?.user) throw new Error('Inicia sesión nuevamente.');
                     const registros = rows.map(values => {
                         const fechaVencimiento = valorCSV(values, mapa, ['fecha_vencimiento']);
                         const diasVidaCalculado = fechaVencimiento ? calcularDiasVidaActual(fechaVencimiento) : null;
 
                         return {
+                            user_id: authData.user.id,
                             fecha_captura: valorCSV(values, mapa, ['fecha_captura', 'fecha']),
                             sede: valorCSV(values, mapa, ['sede']),
                             idbodega: valorCSV(values, mapa, ['idbodega', 'id_bodega']),
@@ -4429,7 +3972,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
                     const { error } = await supabase
                         .from('vencimientos_semanales')
                         .upsert(registros, {
-                            onConflict: 'fecha_captura,sede,idbodega,codigo'
+                            onConflict: 'sede,idbodega,codigo'
                         });
 
                     if (error) {
@@ -4448,10 +3991,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
             };
 
             reader.readAsText(file);
-			document.getElementById('modalCargaManual')?.classList.add('hidden');
-		    document.getElementById('modalCargaManual')?.classList.remove('flex');
-		
-		    limpiarImportVencimientos();
+
         }
 
         function previewInventoryFile(input) {
@@ -4464,16 +4004,11 @@ function normalizarNombreColumnaCSV(nombre = '') {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const text = e.target.result;
-                    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-                    
-                    if (lines.length > 0) {
-                        const headers = lines[0].split(',');
-                        const rows = [];
-                        for (let i = 1; i < Math.min(lines.length, 6); i++) {
-                            rows.push(lines[i].split(','));
-                        }
-                        const preview = buildSafeTablePreview(headers, rows);
+                    let parsed;
+                    try { parsed = convertirCSVATabla(e.target.result); }
+                    catch (error) { confirmBtn.disabled = true; previewDiv.classList.add('hidden'); showNotification('CSV',error.message,'error'); return; }
+                    if (parsed.headers.length > 0 && parsed.rows.length > 0) {
+                        const preview = buildSafeTablePreview(parsed.headers, parsed.rows.slice(0,5));
                         previewHead.innerHTML = preview.headHtml;
                         previewBody.innerHTML = preview.bodyHtml;
                         previewDiv.classList.remove('hidden');
@@ -4491,94 +4026,46 @@ function normalizarNombreColumnaCSV(nombre = '') {
             }
         }
 
+        let importandoInventario = false;
         async function importInventory() {
-		    const fileInput = document.getElementById('importInventoryFile');
-		    const file = fileInput.files[0];
-		
-		    if (!file) {
-		        showNotification('Error', 'Seleccione un archivo CSV', 'error');
-		        return;
-		    }
-		
-		    const reader = new FileReader();
-		    reader.onload = async function(e) {
-		        const text = e.target.result;
-		        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-		
-		        if (lines.length < 2) {
-		            showNotification('Error', 'El archivo no tiene datos', 'error');
-		            return;
-		        }
-		
-		        let registros = [];
-		
-		        for (let i = 1; i < lines.length; i++) {
-		            const values = lines[i].split(',');
-		
-		            if (values.length < 8) continue;
-		
-		            registros.push({
-		                fecha: limpiarValor(values[0]),
-		                proveedor: limpiarValor(values[1]),
-		                codigo_barra: limpiarValor(values[2]),
-		                codigo: limpiarValor(values[3]),
-		                descripcion: limpiarValor(values[4]),
-		                inventario_reporteria: parseFloat(limpiarValor(values[5])) || 0,
-		                masterpack: parseFloat(limpiarValor(values[6])) || 1,
-		                idBodega: limpiarValor(values[7]) || null
-		            });
-		        }
-		
-		        if (registros.length === 0) {
-		            showNotification('Error', 'No hay registros válidos para importar', 'error');
-		            return;
-		        }
-		
-		        const { error: deleteError } = await supabase
-				  .rpc('rpc_limpiar_inventario_reporteria_segura', {
-					  p_usuario: currentUser?.username || currentUser?.usuario || ''
-					});
-				
-				if (deleteError) {
-				  console.error('Error limpiando inventario_reporteria:', deleteError);
-				  alert('Error limpiando la tabla antes de importar');
-				  return;
-				}
-		
-		        const { error: insertError } = await supabase
-		            .from('inventario_reporteria')
-		            .insert(registros);
-		
-		        if (insertError) {
-		            showNotification('Error', insertError.message, 'error');
-		            return;
-		        }
-		
-		        const { error: logError } = await supabase
-		            .from('inventario_importaciones')
-		            .insert([{
-		                usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
-		                fecha_importacion: new Date().toISOString(),
-		                cantidad_registros: registros.length,
-		                tipo_importacion: 'inventario'
-		            }]);
-		
-		        if (logError) {
-		            console.error('Error guardando historial:', logError);
-		            showNotification('Advertencia', `Se cargó el inventario, pero no se guardó el historial: ${logError.message}`, 'warning');
-		            return;
-		        }
-		
-		        showNotification('Éxito', 'Inventario de reportería cargado correctamente', 'success');
-		        cargarResumenInventario();
-		
-		        document.getElementById('inventoryPreview').classList.add('hidden');
-		        document.getElementById('confirmImportInventory').disabled = true;
-		        fileInput.value = '';
-		    };
-		
-		    reader.readAsText(file);
-		}
+            if (importandoInventario || !currentUser?.can_write) return;
+            const input = document.getElementById('importInventoryFile');
+            const file = input.files?.[0];
+            if (!file) { showNotification('CSV','Seleccione un archivo CSV.','error'); return; }
+            importandoInventario = true;
+            const button = document.getElementById('confirmImportInventory');
+            button.disabled = true;
+            try {
+                const {rows} = convertirCSVATabla(await file.text());
+                if (!rows.length) throw new Error('El archivo no tiene datos.');
+                const registros = rows.map((row,index) => {
+                    if(row.length<8) throw new Error(`Fila ${index+2}: faltan columnas del formato de inventario.`);
+                    const [fecha,proveedor,codigo_barra,codigo,descripcion,stock,pack,idBodega] = row.map(limpiarValor);
+                    const inventory = Number(stock || 0), masterpack = Number(pack || 1);
+                    const warehouse = /^\d{1,3}$/.test(idBodega) ? idBodega.padStart(3,'0') : idBodega;
+                    if(!codigo || !/^\d+$/.test(codigo) || Number(codigo)>2147483647 || !descripcion || codigo_barra.length>100 || !Number.isInteger(inventory) || Math.abs(inventory)>2147483647 || !Number.isInteger(masterpack) || masterpack<=0 || masterpack>2147483647)
+                        throw new Error(`Fila ${index+2}: revisa código, descripción y cantidades enteras sin separador de miles.`);
+                    if (!(window.bodegasData || []).some(b => b.id_bodega === warehouse)) throw new Error(`Fila ${index+2}: bodega no disponible para esta cuenta.`);
+                    let date; try { date=window.inventoryTools.inventoryDate(fecha); } catch(error) { throw new Error(`Fila ${index+2}: ${error.message}`); }
+                    return {fecha:date,proveedor,codigo_barra,codigo,descripcion,inventario_reporteria:inventory,masterpack,idBodega:warehouse};
+                });
+                // Compatibility path until the atomic RPC migration can be applied.
+                const {error: clearError} = await supabase.rpc('rpc_limpiar_inventario_reporteria_segura',{p_usuario:getUsuarioActual()});
+                if (clearError) throw clearError;
+                const {error: insertError} = await supabase.from('inventario_reporteria').insert(registros);
+                if (insertError) throw insertError;
+                const {error: logError} = await supabase.from('inventario_importaciones').insert([{usuario:getUsuarioActual(),fecha_importacion:new Date().toISOString(),cantidad_registros:registros.length,tipo_importacion:'inventario'}]);
+                if (logError) console.warn('La importación se completó sin poder guardar su historial:',logError);
+                const data={registros:registros.length};
+                window.inventoryReadCache.clear();
+                input.value = '';
+                document.getElementById('inventoryPreview').classList.add('hidden');
+                await cargarResumenInventario();
+                showNotification('Éxito',`${data.registros} registros de reportería importados correctamente.`,'success');
+            } catch(error) {
+                showNotification('Importación',`${error.message || 'No se pudo importar el archivo.'} Revisa el resumen antes de reintentar.`,'error',8000);
+            } finally { importandoInventario=false; button.disabled=!input.files?.length; }
+        }
 
         async function cargarResumenInventario() {
 		    const { data, error } = await supabase
@@ -4600,123 +4087,22 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		
 		    tabla.innerHTML = data.map(r => `
 		        <tr class="border-b hover:bg-gray-50">
-		            <td class="py-3">${r.usuario}</td>
+		            <td class="py-3">${escapeHtml(r.usuario)}</td>
 		            <td class="text-center">${r.cantidad_registros}</td>
 		            <td class="text-center">${new Date(r.fecha_importacion).toLocaleDateString()}</td>
 		        </tr>
 		    `).join('');
 		}
-        async function descargarRespaldoJSON(nombreBase, payload) {
-            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${nombreBase}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
+        
 
-        function generarTimestampArchivo() {
-            return new Date().toISOString().replace(/[:.]/g, '-');
-        }
+        
 
-        function obtenerRutaRespaldo(nombreBase) {
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const nombreSeguro = String(nombreBase || 'respaldo')
-                .toLowerCase()
-                .replace(/[^a-z0-9_-]/gi, '_')
-                .replace(/_+/g, '_');
+        
 
-            return `${STORAGE_BACKUP_FOLDER}/${yyyy}/${mm}/${dd}/${nombreSeguro}_${generarTimestampArchivo()}.json`;
-        }
-
-        async function registrarHistorialRespaldo(registro) {
-		    try {
-		        const payload = {
-		            tipo_respaldo: registro.tipo_respaldo,
-		            bucket: registro.bucket,
-		            ruta_archivo: registro.ruta_archivo,
-		            nombre_archivo: registro.nombre_archivo,
-		
-		            // columnas nuevas o existentes en tu SQL
-		            usuario: registro.usuario || registro.ejecutado_por || null,
-		            ejecutado_por: registro.ejecutado_por || null,
-		            autorizado_por: registro.autorizado_por || null,
-		
-		            resumen: registro.resumen || null,
-		            tamano_bytes: registro.tamano_bytes ?? null,
-		            observaciones: registro.observaciones || null,
-		
-		            tablas_incluidas: registro.tablas_incluidas || [],
-		            totales_registros: registro.totales_registros || {},
-		            fecha_generacion: registro.fecha_generacion
-		        };
-		
-		        const { error } = await supabase
-		            .from(HISTORIAL_RESPALDOS_TABLE)
-		            .insert([payload]);
-		
-		        if (error) {
-		            console.warn('No se pudo registrar en historial_respaldos:', error);
-		            return false;
-		        }
-		
-		        return true;
-		    } catch (error) {
-		        console.warn('No se pudo registrar el historial del respaldo:', error);
-		        return false;
-		    }
-		}
+        
 
 
-        async function subirRespaldoASupabase(nombreBase, payload, opciones = {}) {
-            const fechaGeneracion = new Date().toISOString();
-            const rutaArchivo = obtenerRutaRespaldo(nombreBase);
-            const contenido = JSON.stringify(payload, null, 2);
-            const archivo = new File([contenido], rutaArchivo.split('/').pop(), {
-                type: 'application/json'
-            });
-
-            const { data, error } = await supabase.storage
-                .from(STORAGE_BACKUP_BUCKET)
-                .upload(rutaArchivo, archivo, {
-                    contentType: 'application/json',
-                    upsert: false
-                });
-
-            if (error) {
-                console.error('Error subiendo respaldo a Storage:', error);
-                throw new Error(`No se pudo subir el respaldo a Supabase Storage. Verifique el bucket "${STORAGE_BACKUP_BUCKET}" y sus políticas.`);
-            }
-
-            await registrarHistorialRespaldo({
-                tipo_respaldo: opciones.tipo_respaldo || nombreBase,
-                bucket: STORAGE_BACKUP_BUCKET,
-                ruta_archivo: data.path,
-                nombre_archivo: archivo.name,
-                usuario: currentUser?.username || currentUser?.usuario || 'desconocido',
-                ejecutado_por: currentUser?.username || currentUser?.usuario || 'desconocido',
-                autorizado_por: opciones.autorizado_por || null,
-                resumen: JSON.stringify(opciones.totales_registros || {}),
-                tamano_bytes: archivo.size,
-                observaciones: opciones.observaciones || null,
-                tablas_incluidas: opciones.tablas_incluidas || [],
-                totales_registros: opciones.totales_registros || {},
-                fecha_generacion: fechaGeneracion
-            });
-
-            return {
-                bucket: STORAGE_BACKUP_BUCKET,
-                path: data.path,
-                nombreArchivo: archivo.name,
-                fechaGeneracion
-            };
-        }
+        
 
         async function solicitarAutorizacionAdmin() {
             if (currentUser?.can_delete) return currentUser.username || currentUser.email;
@@ -4738,7 +4124,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 
 			const sede = document.getElementById('sel-sede-eliminar-inventario').value;
 			const bodega = document.getElementById('sel-bodega-eliminar-inventario').value;
-			const usuarioActual = localStorage.getItem('usuario'); 
+			const usuarioActual = getUsuarioActual(); 
 
             const { data, error } = await supabase.rpc(
 			  'rpc_eliminar_inventarios_completo_seguro',
@@ -4767,6 +4153,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 			    9000
 			);
 
+            window.inventoryReadCache.clear();
             limpiarFormulario();
             await Promise.all([
                 loadInventory(),
@@ -4829,6 +4216,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
                 return;
             }
 
+            window.inventoryReadCache.clear();
             showNotification('Éxito', `Base de códigos eliminada con respaldo. Registros: ${data.codigos || 0}.`, 'success', 9000);
             cargarResumenCodigos();
 
@@ -4855,16 +4243,11 @@ function normalizarNombreColumnaCSV(nombre = '') {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const text = e.target.result;
-                    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-                    
-                    if (lines.length > 0) {
-                        const headers = lines[0].split(',');
-                        const rows = [];
-                        for (let i = 1; i < Math.min(lines.length, 6); i++) {
-                            rows.push(lines[i].split(','));
-                        }
-                        const preview = buildSafeTablePreview(headers, rows);
+                    let parsed;
+                    try { parsed = convertirCSVATabla(e.target.result); }
+                    catch (error) { confirmBtn.disabled = true; previewDiv.classList.add('hidden'); showNotification('CSV',error.message,'error'); return; }
+                    if (parsed.headers.length > 0 && parsed.rows.length > 0) {
+                        const preview = buildSafeTablePreview(parsed.headers, parsed.rows.slice(0,5));
                         previewHead.innerHTML = preview.headHtml;
                         previewBody.innerHTML = preview.bodyHtml;
                         previewDiv.classList.remove('hidden');
@@ -4895,13 +4278,11 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		
 		    reader.onload = async function (e) {
 		        try {
-		            const text = e.target.result;
-		            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                    const parsed = convertirCSVATabla(e.target.result);
 		
 		            let registros = [];
 		
-		            for (let i = 1; i < lines.length; i++) {
-		                const values = lines[i].split(',');
+		            for (const values of parsed.rows) {
 		
 		                if (values.length < 6) continue;
 		
@@ -4944,6 +4325,7 @@ function normalizarNombreColumnaCSV(nombre = '') {
 		                return;
 		            }
 		
+                    window.inventoryReadCache.clear();
 		            const { error: logError } = await supabase
 		                .from('inventario_importaciones')
 		                .insert([{
@@ -5006,13 +4388,9 @@ function escapeAttr(value) {
             return { headHtml, bodyHtml };
         }
 
-        function editUser() {
-            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-        }
+        
 
-        async function deleteUser() {
-            showNotification('Bloqueado', 'La gestión de usuarios debe migrarse a funciones RPC seguras antes de activarse.', 'warning');
-        }
+        
 
         // ===== RESUMEN IMPORTACIONES =====
         // ===== RESUMEN IMPORTACIONES =====
@@ -5052,34 +4430,15 @@ tbody.innerHTML = data.map(item => {
 
         return `
             <tr class="border-b hover:bg-gray-50">
-                <td class="py-3">${usuario}</td>
+                <td class="py-3">${escapeHtml(usuario)}</td>
                 <td class="text-center">${cantidad}</td>
-                <td class="text-center">${fecha}</td>
+                <td class="text-center">${escapeHtml(fecha)}</td>
             </tr>
         `;
     }).join('');
 }
 		
-        async function eliminarImportacion(usuario, fecha) {
-
-    if (!confirm("¿Eliminar este registro de importación?")) return;
-
-    const { error } = await supabase
-        .from('codigos')
-        .delete()
-        .eq('usuario', usuario)
-        .gte('fecha_creacion', fecha + ' 00:00:00')
-        .lte('fecha_creacion', fecha + ' 23:59:59');
-
-    if (error) {
-        console.error(error);
-        showNotification('Error', 'No se pudo eliminar', 'error');
-        return;
-    }
-
-    showNotification('Éxito', 'Registros eliminados', 'success');
-    cargarResumenCodigos();
-}      
+              
 
     function showNotification(title, message, type = 'info', duration = 4000) {
 
@@ -5105,51 +4464,10 @@ tbody.innerHTML = data.map(item => {
         notification.classList.add('hidden');
     }, duration);
 }
-			async function cargarArticulosRecientes(sede, tipoBodega, fecha) {
-			    const contenedor = document.getElementById('recentItems');
-			
-			    // Mapeo de tipo de bodega a códigos de idBodega
-			    const tiposBodegaMap = {
-			        'Principal': ['010', '030', '040', '050', '060'],
-			        'PPV': ['013', '033', '043', '053', '063'],
-			        'PFN': ['095', '096', '097', '098', '099']
-			    };
-			
-			    // Construir query base
-			    let query = supabase
-			        .from('inventarios_diarios')
-			        .select('id, fecha, created_at, sede, idBodega, codigo, descripcion, proveedor');
-			
-			    if (sede && sede !== 'Todas') {
-			        query = query.eq('sede', sede);
-			    }
-			    if (fecha) {
-			        query = query.eq('fecha', fecha);
-			    }
-			
-			    // Aplicar filtro de tipo de bodega directamente en la consulta
-			    if (tipoBodega && tipoBodega !== 'Todas') {
-			        const codigosBodega = tiposBodegaMap[tipoBodega] || [];
-			        if (codigosBodega.length > 0) {
-			            query = query.in('idBodega', codigosBodega);
-			        }
-			    }
-			
-			    // Ordenar y limitar
-			    query = query.order('created_at', { ascending: false }).limit(5);
-			
-			    const { data, error } = await query;
-			
-			    if (error || !data || data.length === 0) {
-			        contenedor.innerHTML = `
-			            <div class="text-center py-8 text-gray-500">
-			                <i class="fas fa-inbox text-3xl mb-2"></i>
-			                <p>No hay artículos recientes</p>
-			            </div>
-			        `;
-			        return;
-			    }
-			
+        async function cargarArticulosRecientes(inventario) {
+            const contenedor = document.getElementById('recentItems');
+            const data = [...inventario].sort((a,b) => String(b.created_at || b.fecha).localeCompare(String(a.created_at || a.fecha))).slice(0,5);
+            if (!data.length) { contenedor.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-inbox text-3xl mb-2"></i><p>No hay artículos recientes</p></div>'; return; }
 			    contenedor.innerHTML = data.map(item => `
 			        <div class="flex justify-between items-center border-b pb-2 gap-3">
 			            <div class="min-w-0">
@@ -5164,26 +4482,14 @@ tbody.innerHTML = data.map(item => {
 			    `).join('');
 			}
 
-		async function cargarGraficoProveedores(sede, tipoBodega, fecha) {
-			let query = supabase.from('inventarios_diarios').select('sede, idBodega, proveedor, codigo');
-			if (sede !== 'Todas') query = query.eq('sede', sede);
-			if (fecha) query = query.eq('fecha', fecha);
-
-			const { data, error } = await query;
-			const contenedor = document.getElementById('proveedorChart');
-			const totalLabel = document.getElementById('totalSkusLabel');
-
-			if (error || !data || data.length === 0) {
-				contenedor.innerHTML = `<div class="text-center text-gray-500"><i class="fas fa-chart-pie text-3xl mb-2"></i><p>No hay datos disponibles</p></div>`;
-				totalLabel.textContent = 'Total SKUs: 0';
-				return;
-			}
-
-			let items = data;
-			if (tipoBodega !== 'Todas') {
-				items = items.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodega);
-			}
-
+        async function cargarGraficoProveedores(items) {
+            const contenedor = document.getElementById('proveedorChart');
+            const totalLabel = document.getElementById('totalSkusLabel');
+            if (!items.length) {
+                window.__proveedorPieChart?.destroy(); window.__proveedorPieChart = null;
+                contenedor.innerHTML = '<div class="text-center text-gray-500"><i class="fas fa-chart-pie text-3xl mb-2"></i><p>No hay datos disponibles</p></div>';
+                totalLabel.textContent = 'Total SKUs: 0'; return;
+            }
 			const agrupado = {};
 			const skuUnicos = new Set();
 			items.forEach(item => {
@@ -5244,41 +4550,10 @@ tbody.innerHTML = data.map(item => {
 		    }
 		  });
 		}
-        async function eliminarInventarioDelDia() {
-		    const fecha = document.getElementById('fechaInventario').value;
-		
-		    if (!fecha) {
-		        showNotification('Error', 'No se encontró la fecha actual', 'error');
-		        return;
-		    }
-		
-		    const confirmar = confirm('¿Está seguro que desea eliminar el inventario del día seleccionado?');
-		    if (!confirmar) return;
-		
-		    const confirmacion = prompt('Escribe ELIMINAR para continuar');
-		    if (confirmacion !== 'ELIMINAR') return;
-		
-		    const { error } = await supabase
-		        .from('inventarios_diarios')
-		        .delete()
-		        .eq('fecha', fecha);
-		
-		    if (error) {
-		        console.error(error);
-		        showNotification('Error', 'No se pudo eliminar el inventario del día', 'error');
-		        return;
-		    }
-		
-		    showNotification('Éxito', 'Inventario del día eliminado correctamente', 'success');
-		    loadInventory();
-		    loadDashboardData();
-		    loadVencimientosData();
-		}
+        
 		
 
-	function normalizarCodigo(codigo) {
-   		return String(codigo || '').trim();
-		}
+	
 
 	function formatearNumeroEntero(valor) {
 	    return Number(valor || 0).toLocaleString('en-US', {
@@ -5286,13 +4561,7 @@ tbody.innerHTML = data.map(item => {
 	    });
 	}
 
-	function sanitizarEnteroConSigno(valor) {
-	    let limpio = String(valor || '').replace(/[^0-9-]/g, '');
-	    if (!limpio) return '';
-	    const esNegativo = limpio.startsWith('-');
-	    limpio = limpio.replace(/-/g, '');
-	    return (esNegativo ? '-' : '') + limpio;
-	}
+	
 
 	function esEnteroValido(valor) {
 	    return /^-?\d+$/.test(String(valor || '').trim());
@@ -5346,13 +4615,6 @@ tbody.innerHTML = data.map(item => {
 			    const tipoBodegaFiltro = tipoBodegaSelect?.value || 'Todas';
 			    const fecha = fechaInput?.value || null;
 			
-			    // 2. Mapeo de tipos de bodega (según el código de idBodega)
-			    const tiposBodega = {
-			        Principal: ['010', '030', '040', '050', '060'],
-			        PPV: ['013', '033', '043', '053', '063'],
-			        PFN: ['015', '045', '095', '096', '099']
-			    };
-			
 			    // 3. Consultar inventarios_diarios con filtros de sede y fecha (en SQL)
 			    let query = supabase
 			        .from('inventarios_diarios')
@@ -5383,10 +4645,7 @@ tbody.innerHTML = data.map(item => {
 			
 			    // 4. Filtrar por tipo de bodega en memoria (según el código idBodega)
 			    if (tipoBodegaFiltro !== 'Todas') {
-			        const codigosPermitidos = tiposBodega[tipoBodegaFiltro] || [];
-			        inventario = inventario.filter(item =>
-			            codigosPermitidos.includes(String(item.idBodega || '').trim())
-			        );
+                inventario = inventario.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodegaFiltro);
 			    }
 			
 			    // 5. Si no hay inventario después del filtro, mostrar mensaje
@@ -5517,11 +4776,11 @@ tbody.innerHTML = data.map(item => {
 			
 			        return `
 			            <tr class="border-b hover:bg-gray-50"
-			                data-id="${item.id || ''}"
-			                data-codigo="${codigo}"
-			                data-sede="${item.sede || ''}"
+			                data-id="${escapeAttr(item.id || '') }"
+			                data-codigo="${escapeAttr(codigo) }"
+			                data-sede="${escapeAttr(item.sede || '') }"
 			                data-id-bodega="${escapeHtml(idBodega)}"
-			                data-fecha-registro="${fechaRegistro}"
+			                data-fecha-registro="${escapeAttr(fechaRegistro) }"
 			                data-costo-unitario="${costoUnitario}">
 			                <td class="py-3">${escapeHtml(idBodega)}</td>
 			                <td class="py-3 codigo">${escapeHtml(codigo)}</td>
@@ -5532,12 +4791,12 @@ tbody.innerHTML = data.map(item => {
 			                <td class="py-3">
 			                    <input type="number"
 			                           class="cantidad-justificada w-full px-2 py-1 text-sm input-field rounded input-disabled"
-			                           value="${cantidadJustificada}"
+			                           value="${escapeAttr(cantidadJustificada) }"
 			                           disabled>
 			                </td>
 			                <td class="py-3">
 			                    <select class="justificacion input-field w-full px-2 py-1 rounded input-disabled"
-			                            data-id="${codigo}"
+			                            data-id="${escapeAttr(codigo) }"
 			                            disabled>
 			                        ${construirOpcionesJustificacion(justificacionGuardada)}
 			                    </select>
@@ -5553,32 +4812,7 @@ tbody.innerHTML = data.map(item => {
 			    }).join('');
 			}
 
-async function guardarJustificacion(id, texto) {
-    const { data, error } = await supabase.rpc('rpc_guardar_justificacion_articulo_segura', {
-        p_id: String(id),
-        p_justificacion: texto,
-        p_usuario: currentUser?.username || currentUser?.usuario || ''
-    });
 
-    if (error || !data?.ok) {
-        console.error('Error guardando justificación por RPC:', error || data);
-        showNotification('Error', data?.mensaje || error?.message || 'No se pudo guardar la justificación', 'error');
-        return;
-    }
-}
-
-	const userShortNameFooter = document.getElementById('userShortNameFooter');
-
-		if (userShortNameFooter && currentUser) {
-		    userShortNameFooter.textContent = currentUser.nombre_corto;
-		}
-
-	const logoutBtnBottom = document.getElementById('logoutBtnBottom');
-		if (logoutBtnBottom) {
-    		logoutBtnBottom.addEventListener('click', async function() {
-                await logout();
-    		});
-		}
 	async function logout() {
 	    try {
                 await window.supabase.auth.signOut();
@@ -5587,7 +4821,7 @@ async function guardarJustificacion(id, texto) {
             }
 	    sessionStorage.removeItem('currentUser');
             window.currentUser = null;
-	    window.location.href = '../control-tiempos/intranet.html';
+	    window.location.href = '/intranet/intranet.html';
 		}
 		
 	function activarModoEdicion() {
@@ -5703,9 +4937,7 @@ async function guardarJustificacion(id, texto) {
 	    return (esNegativo ? '-L. ' : 'L. ') + valorAbsoluto;
 	}
 
-	function calcularCostoTotalJustificacion(diferencia, costoUnitario) {
-	    return Number(diferencia || 0) * Number(costoUnitario || 0);
-	}
+	
 
 	function calcularTotalUnidades() {
 	    const cajas = parseFloat(document.getElementById('cajasFardos').value) || 0;
@@ -5714,8 +4946,7 @@ async function guardarJustificacion(id, texto) {
 	
 	    const totalUnidades = (cajas * masterpack) + unidades;
 	    document.getElementById('totalUnidadesCalculo').textContent = formatearNumeroEntero(totalUnidades);
-	
-	    const inventarioReporteria = parseFloat(document.getElementById('inventarioReporteria').value) || 0;
+
 	    const costoUnitario = Number(window.costoUnitarioActual) || 0;
 	
 	    const costoTotalInventario = totalUnidades * costoUnitario;
@@ -5724,39 +4955,31 @@ async function guardarJustificacion(id, texto) {
 	    document.getElementById('costoTotal').value = formatearMoneda(costoTotalInventario);
 	}
 
-	function calcularCostoTotal(diferencia) {
-	    const costo = window.costoUnitarioActual || 0;
-	    const total = costo * diferencia;
-	    
-		window.costoTotalActual = total;
-	    document.getElementById('costoTotal').value = formatearMoneda(total);
-		}
+	
 
-		function actualizarBodegasPorSede() {
-		    const sede = document.getElementById('sede').value;
-		    const selectBodega = document.getElementById('idBodega');
-		
-		    // Limpiar opciones
-		    selectBodega.innerHTML = '<option value="">Seleccione</option>';
-		
-		    if (!sede || !window.bodegasPorSede || !window.bodegasPorSede[sede]) {
-		        selectBodega.disabled = true;
-		        return;
-		    }
-		
-		    const bodegas = window.bodegasPorSede[sede];
-		    bodegas.forEach(b => {
-		        const option = document.createElement('option');
-		        option.value = b.value;      // "030", "033", etc.
-		        option.textContent = b.label; // "Principal", "PPV", "PFN"
-		        // Asignar si maneja vencimiento (opcional, según tu lógica)
-		        option.dataset.manejaVencimiento = (b.label === 'Principal' || b.label === 'PPV') ? 'true' : 'false';
-		        selectBodega.appendChild(option);
-		    });
-		
-		    selectBodega.disabled = false;
-		}
-		
+        async function cargarBodegas() {
+            const {data,error} = await supabase.from('bodegas').select('id_bodega,sede,nombre,tipos_bodega(tipos_bodega,maneja_vencimiento)').order('sede').order('id_bodega');
+            if (error) { showNotification('Bodegas','No se pudieron cargar las bodegas. Actualiza la página para reintentar.','error'); return; }
+            window.bodegasData = (data || []).filter(bodega => currentUser.sedes.includes(window.inventorySiteCode(bodega.sede)));
+            actualizarBodegasPorSede();
+        }
+        function actualizarBodegasPorSede() {
+            const site = window.inventorySiteCode(document.getElementById('sede').value);
+            const select = document.getElementById('idBodega');
+            select.innerHTML = '<option value="">Seleccione una bodega</option>';
+            const rows = (window.bodegasData || []).filter(bodega => site && window.inventorySiteCode(bodega.sede) === site);
+            rows.forEach(bodega => {
+                const option = document.createElement('option');
+                option.value = bodega.id_bodega;
+                const type = bodega.tipos_bodega?.tipos_bodega || '';
+                option.textContent = `${bodega.id_bodega} - ${bodega.nombre !== bodega.id_bodega ? bodega.nombre : type}`;
+                option.dataset.manejaVencimiento = String(bodega.tipos_bodega?.maneja_vencimiento === true);
+                select.append(option);
+            });
+            select.disabled = rows.length === 0;
+            evaluarVencimiento();
+        }
+
         let vencimientosChartInstance = null;
         function normalizarFechaLocal(fechaStr) {
             const [y, m, d] = String(fechaStr).split('-').map(Number);
@@ -5779,8 +5002,7 @@ async function guardarJustificacion(id, texto) {
 		function calcularDiasVidaActual(fechaVencimiento) {
 		    if (!fechaVencimiento) return null;
 		
-		    const hoy = new Date();
-		    const hoyBase = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+            const hoyBase = normalizarFechaLocal(window.inventoryTools.hondurasDate());
 		
 		    const venc = normalizarFechaLocal(fechaVencimiento);
 		    if (Number.isNaN(venc.getTime())) return null;
@@ -5789,7 +5011,6 @@ async function guardarJustificacion(id, texto) {
 		}
 		
 		function obtenerRangoDiasVida(diasvida, fechaVencimiento, idbodega = '') {
-		    const bodega = String(idbodega || '').trim();
 		
 		    if (!fechaVencimiento) {
 		        return 'sin_fecha';
@@ -5824,9 +5045,8 @@ async function guardarJustificacion(id, texto) {
 			
 			actualizarLabelFiltrosActivos();
 			
-            const queryResult = await supabase
-                .from('vencimientos_semanales')
-                .select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida');
+            const queryResult = await window.inventoryTools.fetchAllRows(() => supabase
+                .from('vencimientos_semanales').select('sede, idbodega, codigo, descripcion, fecha_vencimiento, diasvida').order('sede').order('idbodega').order('codigo'));
 
             const { data, error } = queryResult;
 
@@ -5911,9 +5131,9 @@ async function guardarJustificacion(id, texto) {
 
             tbody.innerHTML = urgentes.map(item => `
                 <tr class="border-b border-gray-100">
-                    <td class="py-3">${item.idbodega || ''}</td>
-                    <td class="py-3">${item.codigo || ''}</td>
-                    <td class="py-3">${item.descripcion || ''}</td>
+                    <td class="py-3">${escapeHtml(item.idbodega || '')}</td>
+                    <td class="py-3">${escapeHtml(item.codigo || '')}</td>
+                    <td class="py-3">${escapeHtml(item.descripcion || '')}</td>
                     <td class="py-3">${formatearFechaCorta(item.fecha_vencimiento)}</td>
                     <td class="py-3 font-semibold ${item.diasvida <= 60 ? 'text-red-600' : item.diasvida <= 90 ? 'text-orange-600' : 'text-green-600'}">
                         ${item.diasvida ?? ''}
@@ -5978,255 +5198,69 @@ async function guardarJustificacion(id, texto) {
             });
         }
 
-		function limpiarValor(valor) {
-    		if (!valor) return '';
-    		return String(valor)
-		        .trim()
-		        .replace(/\r?\n/g, '')
-		        .replace(/"/g, '');
-			}
-
-let resolveAuth = null;
-function abrirModalAuth() {
-  const modal = document.getElementById('modalAuth');
-  const userInput = document.getElementById('authUser');
-  const passInput = document.getElementById('authPass');
-
-  if (!modal || !userInput || !passInput) {
-    return Promise.resolve(null);
-  }
-
-  userInput.value = '';
-  passInput.value = '';
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-
-  requestAnimationFrame(() => userInput.focus());
-
-  return new Promise((resolve) => {
-    resolveAuth = resolve;
-  });
-}
-
-function cerrarModalAuth() {
-  const modal = document.getElementById('modalAuth');
-  const userInput = document.getElementById('authUser');
-  const passInput = document.getElementById('authPass');
-
-  if (modal) {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }
-
-  if (userInput) userInput.value = '';
-  if (passInput) passInput.value = '';
-
-  if (resolveAuth) {
-    resolveAuth(null);
-    resolveAuth = null;
-  }
-}
-
-function confirmarAuth() {
-  const modal = document.getElementById('modalAuth');
-  const userInput = document.getElementById('authUser');
-  const passInput = document.getElementById('authPass');
-
-  const usuario = userInput?.value?.trim() || '';
-  const password = passInput?.value || '';
-
-  if (!usuario || !password) {
-    showNotification('Error', 'Debe ingresar usuario y contraseña', 'error');
-    if (!usuario) {
-      userInput?.focus();
-    } else {
-      passInput?.focus();
-    }
-    return;
-  }
-
-  if (modal) {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }
-
-  if (userInput) userInput.value = '';
-  if (passInput) passInput.value = '';
-
-  if (resolveAuth) {
-    resolveAuth({ usuario, password });
-    resolveAuth = null;
-  }
-}
-
-async function obtenerAccessToken() {
-    const { data, error } = await supabase.auth.getSession();
-
-    if (error) throw error;
-    if (!data.session?.access_token) {
-        throw new Error('No hay sesión activa');
-    }
-
-    return data.session.access_token;
-}
-
-		async function llamarFuncionSegura(datosUsuario) {
-			  const { data, error } = await supabase.auth.getSession();
-			
-			  const token = data?.session?.access_token;
-			  if (!token) throw new Error("No hay sesión activa");
-			
-			  const resp = await fetch(
-			    "https://czxzghhwgfciyrgmgtai.supabase.co/functions/v1/admin-create-user",
-			    {
-			      method: "POST",
-			      headers: {
-			        "Content-Type": "application/json",
-			        "Authorization": `Bearer ${token}`
-			      },
-			      body: JSON.stringify(datosUsuario)
-			    }
-			  );
-			
-			  const texto = await resp.text();
-			
-			  let json = {};
-			  try {
-			    json = texto ? JSON.parse(texto) : {};
-			  } catch {
-			    json = { error: texto || "Respuesta no válida del servidor" };
-			  }
-			
-			  if (!resp.ok) {
-			    let errorMsg = 'Error al crear usuario';
-			    try {
-			        const errJson = await resp.json();
-			        errorMsg = errJson.error || errJson.detalle || errorMsg;
-			    } catch (_) {}
-			    throw new Error(errorMsg);
-			}
-			
-			  return json;
-			}
+        function limpiarValor(valor) { return valor == null ? '' : String(valor).trim(); }
 
 		function getUsuarioActual() {
 		    return currentUser?.username || currentUser?.usuario || 'desconocido';
 		}
 
-		function esFechaLunes(fechaBase = new Date()) {
-		    return fechaBase.getDay() === 1;
-		}
-
-		function setEstadoFechaVencimiento(habilitado) {
-		    const fechaInput = document.getElementById('fechaVencimiento');
-		    if (!fechaInput) return;
-
-		    fechaInput.disabled = !habilitado;
-		    fechaInput.readOnly = !habilitado;
-		    fechaInput.classList.toggle('bg-gray-100', !habilitado);
-		    fechaInput.classList.toggle('input-disabled', !habilitado);
-		}
-
-		function toggleFechaVencimiento() {
-		    const fechaInput = document.getElementById('fechaVencimiento');
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    if (!fechaInput || !checkVencimiento) return;
-
-		    const habilitado = !!checkVencimiento.checked;
-		    setEstadoFechaVencimiento(habilitado);
-
-		    if (!habilitado) {
-		        fechaInput.value = '';
-		    }
-		}
-
-		async function evaluarVencimiento() {
-		    const selectBodega = document.getElementById('idBodega');
-		    const contenedor = document.getElementById('contenedorVencimiento');
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaInput = document.getElementById('fechaVencimiento');
-		
-		    if (!selectBodega || !contenedor || !checkVencimiento || !fechaInput) return;
-		
-		    const opcionSeleccionada = selectBodega.options[selectBodega.selectedIndex];
-		    const manejaVencimiento = opcionSeleccionada?.dataset?.manejaVencimiento === 'true';
-		
-		    // Ocultar si no maneja vencimiento
-		    if (!manejaVencimiento || !selectBodega.value) {
-		        contenedor.classList.add('hidden');
-		        checkVencimiento.checked = false;
-		        fechaInput.value = '';
-		        setEstadoFechaVencimiento(false);
-		        return;
-		    }
-		
-		    contenedor.classList.remove('hidden');
-		
-		    // Obtener día configurado
-		    const diaConfig = await obtenerDiaVencimiento();
-		    const hoyEsDiaConfig = esDiaVencimiento(diaConfig);
-		
-		    if (hoyEsDiaConfig) {
-		        // Si hoy es el día elegido, habilitar automáticamente
-		        checkVencimiento.checked = true;
-		        setEstadoFechaVencimiento(true);
-		    } else {
-		        // Si no, solo se habilita si el usuario marca el checkbox
-		        checkVencimiento.checked = false;
-		        fechaInput.value = '';
-		        setEstadoFechaVencimiento(false);
-		    }
-		}
-
-		document.addEventListener('DOMContentLoaded', () => {
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    if (checkVencimiento) {
-		        checkVencimiento.addEventListener('change', toggleFechaVencimiento);
-		    }
-		    evaluarVencimiento();
-		});
-
-		// --- Configuración del día de vencimiento ---
-		async function obtenerDiaVencimiento() {
-		    // Valor por defecto: 1 (Lunes)
-		    const { data, error } = await supabase
-		        .from('configuracion')
-		        .select('valor')
-		        .eq('clave', 'dia_vencimiento')
-		        .maybeSingle();
-		
-		    if (error) {
-		        console.error('Error obteniendo día de vencimiento:', error);
-		        return 1; // fallback a lunes
-		    }
-		    if (data && data.valor !== undefined && data.valor !== null) {
-		        return parseInt(data.valor, 10);
-		    }
-		    // Si no existe, lo creamos con valor 1
-		    await supabase
-		        .from('configuracion')
-		        .insert([{ clave: 'dia_vencimiento', valor: '1' }]);
-		    return 1;
-		}
-		
-		async function guardarDiaVencimiento(dia) {
-		    const diaNum = parseInt(dia, 10);
-		    if (isNaN(diaNum) || diaNum < 0 || diaNum > 6) {
-		        throw new Error('Día inválido');
-		    }
-		    const { error } = await supabase
-		        .from('configuracion')
-		        .upsert(
-		            { clave: 'dia_vencimiento', valor: String(diaNum) },
-		            { onConflict: 'clave' }
-		        );
-		    if (error) throw error;
-		}
-
-function esDiaVencimiento(diaConfigurado) {
-    const hoy = new Date().getDay(); // 0=domingo
-    return hoy === diaConfigurado;
-}
+        let diaVencimientoPromise = null;
+        function obtenerDiaVencimiento() {
+            if (!diaVencimientoPromise) diaVencimientoPromise = (async () => {
+                const { data, error } = await supabase.from('configuracion').select('valor').eq('clave','dia_vencimiento').maybeSingle();
+                if (error) { console.warn('No se pudo leer el día de vencimiento:', error); diaVencimientoPromise = null; return 1; }
+                const day = Number(data?.valor ?? 1);
+                return Number.isInteger(day) && day >= 0 && day <= 6 ? day : 1;
+            })();
+            return diaVencimientoPromise;
+        }
+        async function guardarDiaVencimiento(dia) {
+            const day = Number(dia);
+            if (!Number.isInteger(day) || day < 0 || day > 6) throw new Error('Día inválido');
+            const { error } = await supabase.from('configuracion').upsert({clave:'dia_vencimiento',valor:String(day)},{onConflict:'clave'});
+            if (error) throw error;
+            diaVencimientoPromise = Promise.resolve(day);
+        }
+        function esDiaVencimiento(dia) { return window.inventoryTools.hondurasWeekday() === Number(dia); }
+        function setEstadoFechaVencimiento(habilitado) {
+            const input = document.getElementById('fechaVencimiento');
+            input.disabled = !habilitado; input.readOnly = !habilitado;
+            input.classList.toggle('bg-gray-100', !habilitado);
+            input.classList.toggle('input-disabled', !habilitado);
+        }
+        function bodegaPermiteVencimiento() {
+            return document.getElementById('idBodega').selectedOptions[0]?.dataset.manejaVencimiento === 'true';
+        }
+        function toggleFechaVencimiento() {
+            const check = document.getElementById('checkVencimiento');
+            if (!bodegaPermiteVencimiento()) check.checked = false;
+            setEstadoFechaVencimiento(check.checked);
+            if (!check.checked) document.getElementById('fechaVencimiento').value = '';
+        }
+        let vencimientoEvaluation = 0;
+        async function evaluarVencimiento() {
+            const run = ++vencimientoEvaluation;
+            const check = document.getElementById('checkVencimiento');
+            const allowed = bodegaPermiteVencimiento();
+            check.disabled = !allowed;
+            check.checked = false;
+            toggleFechaVencimiento();
+            if (!allowed) return;
+            const day = await obtenerDiaVencimiento();
+            if (run !== vencimientoEvaluation) return;
+            check.checked = esDiaVencimiento(day);
+            toggleFechaVencimiento();
+        }
+        function validarPermiteVencimiento() {
+            if (document.getElementById('checkVencimiento').checked && !bodegaPermiteVencimiento()) {
+                showNotification('Vencimiento', 'La bodega seleccionada no permite registrar fecha de vencimiento.', 'error');
+                return false;
+            }
+            return true;
+        }
+        async function cargarDiaEnSelector() {
+            document.getElementById('diaVencimientoSelect').value = String(await obtenerDiaVencimiento());
+        }
 </script>
 
 <div id="inventoryFooter" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between z-50">
@@ -6249,42 +5283,6 @@ function esDiaVencimiento(diaConfigurado) {
 	</div>
 </div>
 
-<div id="modalAuth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-  <div class="bg-white p-6 rounded-lg w-80">
-    <h3 class="text-lg font-semibold mb-4">Autorización requerida</h3>
-    <input id="authUser" type="text" placeholder="Usuario" autocomplete="username" class="w-full mb-3 px-3 py-2 border rounded">
-    <input id="authPass" type="password" placeholder="Contraseña" autocomplete="current-password" class="w-full mb-4 px-3 py-2 border rounded">
-    <div class="flex justify-end gap-2">
-      <button onclick="cerrarModalAuth()" class="px-3 py-2 border rounded">Cancelar</button>
-      <button onclick="confirmarAuth()" class="px-3 py-2 bg-blue-600 text-white rounded">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('keydown', function(e) {
-  const modal = document.getElementById('modalAuth');
-  if (!modal || modal.classList.contains('hidden')) return;
-
-  if (e.key === 'Escape') {
-    cerrarModalAuth();
-  }
-
-  if (e.key === 'Enter') {
-    const active = document.activeElement;
-    if (active && (active.id === 'authUser' || active.id === 'authPass')) {
-      e.preventDefault();
-      confirmarAuth();
-    }
-  }
-});
-
-document.getElementById('modalAuth')?.addEventListener('click', function(e) {
-  if (e.target === this) {
-    cerrarModalAuth();
-  }
-});
-</script>
     <!-- ===== ASISTENTE FLOTANTE ===== -->
     <button id="assistantFab" class="assistant-fab" type="button" aria-label="Abrir asistente">
         <i class="fas fa-comments"></i>
@@ -6335,289 +5333,6 @@ document.getElementById('modalAuth')?.addEventListener('click', function(e) {
             <div class="assistant-empty-note">Creado por Hernán Banegas.</div>
         </div>
     </div>
-		<script>
-		async function cargarBodegas() {
-		    try {
-		        // ✅ Usar SELECT * para obtener todas las columnas
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select('*');
-		        
-		        if (error) {
-		            console.error('Error al cargar bodegas:', error);
-		            throw error;
-		        }
-		        
 
-		        
-		        if (!data || data.length === 0) {
-		            console.warn('La tabla bodegas está vacía');
-		            return;
-		        }
-		        
-		        const select = document.getElementById('idBodega');
-		        select.innerHTML = '<option value="">Seleccione una bodega</option>';
-		        
-		        // ✅ Usar las columnas reales que existen
-		        data.forEach(bodega => {
-		            const option = document.createElement('option');
-		            option.value = bodega.id_bodega;
-		            
-		            // ✅ Ajustar según las columnas reales que encuentres
-		            // Si solo existe id_bodega, mostrar solo eso
-		            if (bodega.nombre) {
-		                option.textContent = `${bodega.id_bodega} - ${bodega.nombre}`;
-		            } else if (bodega.descripcion) {
-		                option.textContent = `${bodega.id_bodega} - ${bodega.descripcion}`;
-		            } else {
-		                // Si solo existe id_bodega
-		                option.textContent = bodega.id_bodega;
-		            }
-		            
-		            select.appendChild(option);
-		        });
-		        
-		    } catch (err) {
-		        console.error('Error al cargar bodegas:', err);
-		    }
-		}
-		
-		// Llamar al cargar la página
-		document.addEventListener('DOMContentLoaded', cargarBodegas);
-			
-		async function evaluarVencimiento() {
-		    const idBodega = document.getElementById('idBodega').value;
-		    const contenedor = document.getElementById('contenedorVencimiento');
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaInput = document.getElementById('fechaVencimiento');
-		
-		    if (!idBodega) {
-		        contenedor.classList.add('hidden');
-		        checkVencimiento.checked = false;
-		        fechaInput.value = '';
-		        fechaInput.disabled = true;
-		        return;
-		    }
-		
-		    try {
-		        // ✅ Usar SELECT * para obtener todas las columnas
-		        const { data, error } = await supabase
-		            .from('bodegas')
-		            .select('*')
-		            .eq('id_bodega', idBodega);
-		
-		        if (error) {
-		            console.error('Error al consultar bodega:', error);
-		            throw error;
-		        }
-		
-		        if (!data || data.length === 0) {
-		            console.warn('No se encontró la bodega:', idBodega);
-		            contenedor.classList.add('hidden');
-		            return;
-		        }
-		
-		        const dataBodega = data[0];
-		
-		        // ✅ Determinar si permite vencimientos según las columnas reales
-		        // Ajusta según lo que encuentres en la consola
-		        let permiteVencimiento = false;
-		        
-		        if (dataBodega.tipos_bodega) {
-		            permiteVencimiento = dataBodega.tipos_bodega === 'PP' || dataBodega.tipos_bodega === 'PRINCIPAL';
-		        } else if (dataBodega.permite_vencimiento !== undefined) {
-		            permiteVencimiento = dataBodega.permite_vencimiento === true;
-		        } else {
-		            // Si no hay información, permitir por defecto
-		            permiteVencimiento = true;
-		        }
-		
-		        if (!permiteVencimiento) {
-		            contenedor.classList.add('hidden');
-		            checkVencimiento.checked = false;
-		            fechaInput.value = '';
-		            fechaInput.disabled = true;
-		            return;
-		        }
-		
-		        contenedor.classList.remove('hidden');
-		        
-		        const hoy = new Date();
-		        const esLunes = hoy.getDay() === 1;
-		
-		        if (esLunes) {
-		            checkVencimiento.checked = true;
-		            fechaInput.disabled = false;
-		        } else {
-		            checkVencimiento.checked = false;
-		            fechaInput.disabled = true;
-		        }
-		
-		        toggleFechaVencimiento();
-		
-		    } catch (err) {
-		        console.error('Error en evaluarVencimiento:', err);
-		        contenedor.classList.add('hidden');
-		    }
-		}
-		
-		// ✅ CORRECCIÓN 6: Mover los event listeners FUERA de la función
-		document.addEventListener('DOMContentLoaded', () => {
-		    document.getElementById('idBodega').addEventListener('change', evaluarVencimiento);
-		    evaluarVencimiento(); // Ejecutar una vez al cargar
-		});
-		function verificarDiaLunes() {
-	    const hoy = new Date();
-	    const diaSemana = hoy.getDay(); // 0 = Domingo, 1 = Lunes, etc.
-	    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-	    const checkVencimiento = document.getElementById('checkVencimiento');
-	    
-	    if (diaSemana === 1) { // Es lunes
-	        fechaVencimientoInput.disabled = false;
-	        if (checkVencimiento) checkVencimiento.checked = true;
-	    } else {
-	        fechaVencimientoInput.disabled = true;
-	        if (checkVencimiento) checkVencimiento.checked = false;
-	    		}
-		}
-		// Función para habilitar/deshabilitar manualmente
-		function toggleFechaVencimiento() {
-		    const checkVencimiento = document.getElementById('checkVencimiento');
-		    const fechaVencimientoInput = document.getElementById('fechaVencimiento');
-		    
-		    fechaVencimientoInput.disabled = !checkVencimiento.checked;
-		}
-		
-		// Llamar al cargar la página
-		document.addEventListener('DOMContentLoaded', function() {
-		    verificarDiaLunes();
-		});		
-	</script>
-
-<script>
-	
-		function toggleFechaVencimiento() {
-		    const check = document.getElementById('checkVencimiento');
-		    const input = document.getElementById('fechaVencimiento');
-		
-		    if (!check || !input) return;
-		
-		    input.disabled = !check.checked;
-		
-		    if (check.checked) {
-		        input.classList.remove('bg-gray-100', 'input-disabled');
-		    } else {
-		        input.classList.add('bg-gray-100', 'input-disabled');
-		        input.value = '';
-		    }
-		}
-
-		function validarPermiteVencimiento() {
-		    const select = document.getElementById('idBodega');
-		    const check = document.getElementById('checkVencimiento');
-		    const selectedOption = select.options[select.selectedIndex];
-		    const maneja = selectedOption?.dataset?.manejaVencimiento === 'true';
-		
-		    if (check.checked && !maneja) {
-		        alert('La bodega seleccionada no permite registrar fecha de vencimiento.');
-		        return false;
-		    }
-		    return true;
-		}
-
-		document.addEventListener('DOMContentLoaded', () => {
-		    const input = document.getElementById('fechaVencimiento');
-		    const check = document.getElementById('checkVencimiento');
-		    const form = document.getElementById('articuloForm');
-		
-		    if (input) {
-		        input.disabled = true;
-		        input.classList.add('bg-gray-100', 'input-disabled');
-		    }
-		
-		    const hoy = new Date();
-		    const esLunes = hoy.getDay() === 1;
-		
-		    if (check && esLunes) {
-		        check.checked = true;
-		        toggleFechaVencimiento();
-		    }
-		
-		    if (form) {
-		        form.addEventListener('submit', function(e) {
-		            if (!validarPermiteVencimiento()) {
-		                e.preventDefault();
-		                return false;
-		            }
-		        });
-		    }
-		});
-
-		async function cargarDiaEnSelector() {
-		    const select = document.getElementById('diaVencimientoSelect');
-		    if (!select) return;
-		    const dia = await obtenerDiaVencimiento();
-		    select.value = String(dia);
-		}
-	
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const contenedor = document.getElementById('contenedorVencimiento');
-    const check = document.getElementById('checkVencimiento');
-    const fecha = document.getElementById('fechaVencimiento');
-    const form = document.getElementById('articuloForm');
-    const selectBodega = document.getElementById('idBodega');
-
-    if (contenedor) {
-        contenedor.style.display = 'block';
-        contenedor.style.visibility = 'visible';
-    }
-
-    function toggleFechaVencimiento() {
-        if (!fecha || !check) return;
-        fecha.disabled = !check.checked;
-
-        if (fecha.disabled) {
-            fecha.classList.add('input-disabled');
-            fecha.classList.add('bg-gray-100');
-        } else {
-            fecha.classList.remove('input-disabled');
-            fecha.classList.remove('bg-gray-100');
-        }
-    }
-
-    window.toggleFechaVencimiento = toggleFechaVencimiento;
-
-    const hoy = new Date();
-    if (hoy.getDay() === 1 && check) {
-        check.checked = true;
-    }
-
-    toggleFechaVencimiento();
-
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            const selected = selectBodega?.selectedOptions?.[0];
-            const maneja = selected?.dataset?.manejaVencimiento;
-
-            if (check.checked && maneja === 'false') {
-                e.preventDefault();
-                alert('La bodega seleccionada no permite registrar Fecha de Vencimiento.');
-                return false;
-            }
-        }, true);
-    }
-});
-</script>
 </body>
 </html>
-
-
-
-
-
-
-

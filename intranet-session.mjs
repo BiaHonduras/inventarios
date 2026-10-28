@@ -23,8 +23,9 @@ export async function inventorySession(supabase){
 }
 export async function requireInventorySession(supabase){
   const session=await inventorySession(supabase);
-  if(session.status==='password')location.replace('../control-tiempos/cambiar-password.html');
-  else if(session.status==='login'||session.status==='denied')location.replace('../control-tiempos/intranet.html');
-  else if(session.status==='error'){document.documentElement.style.visibility='visible';document.body.innerHTML='<main style="font-family:sans-serif;padding:2rem">No fue posible verificar el acceso a Inventarios. <a href="../control-tiempos/intranet.html">Volver a la Intranet</a>.</main>';}
+  if(session.status==='password')location.replace('/control-tiempos/cambiar-password.html');
+  else if(session.status==='login'||session.status==='denied')location.replace('/intranet/intranet.html');
+  else if(session.status==='error'){document.documentElement.style.visibility='visible';document.body.innerHTML='<main style="font-family:sans-serif;padding:2rem">No fue posible verificar el acceso a Inventarios. <a href="/intranet/intranet.html">Volver a la Intranet</a>.</main>';}
   return session;
 }
+

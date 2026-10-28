@@ -15,9 +15,11 @@
 
     <script type="module">
         import { supabase, verificarConexion } from './supabase-config.js';
-        import { requireInventorySession } from './intranet-session.mjs';
+        import { requireInventorySession } from './intranet-session.mjs?v=20261028-audit';
+        import { fetchAllRows } from './inventory-tools.mjs?v=20261028-audit';
+        window.inventoryFetchAll = fetchAllRows;
         window.inventoryAuthReady = requireInventorySession(supabase);
-        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') location.replace('../control-tiempos/intranet.html'); });
+        supabase.auth.onAuthStateChange(event => { if (event === 'SIGNED_OUT') location.replace('/intranet/intranet.html'); });
         window.supabase = supabase;
         window.verificarConexion = verificarConexion;
     </script>
@@ -515,16 +517,16 @@
 
             if (sede) query = query.eq('sede', sede);
             if (bodegas.length > 0) query = query.in('idBodega', bodegas);
-            if (proveedores.length > 0) query = query.in('proveedor', proveedores);
 
-            console.log('Bodegas: ', bodegas);
-            console.log('Proveedores: ', proveedores);
+
+
+
 
             return query;
         }
 
-        async function cargarTotalSKUs() {
-            const { data, error } = await construirQueryTopVista();
+        async function cargarTotalSKUs(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando SKU desde vista:', error);
@@ -536,8 +538,8 @@
             document.getElementById('total-skus').textContent = unicos.size;
         }
 
-        async function cargarValorInventario() {
-            const { data, error } = await construirQueryTopVista();
+        async function cargarValorInventario(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando valor inventario desde vista:', error);
@@ -552,8 +554,8 @@
             document.getElementById('valor-inventario').textContent = formatearMoneda(total);
         }
 
-        async function cargarValorDiferencias() {
-            const { data, error } = await construirQueryDiferenciasVista();
+        async function cargarValorDiferencias(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando valor diferencias desde vista:', error);
@@ -568,8 +570,8 @@
             document.getElementById('valor-diferencias').textContent = formatearMoneda(total);
         }
 
-        async function cargarUnidadesPorProveedor() {
-            const { data, error } = await construirQueryProveedorVista();
+        async function cargarUnidadesPorProveedor(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando unidades por proveedor desde vista:', error);
@@ -647,8 +649,8 @@
             });
         }
 
-        async function cargarDiferencias() {
-            const { data, error } = await construirQueryDiferenciasVista();
+        async function cargarDiferencias(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando diferencias desde vista:', error);
@@ -708,12 +710,9 @@
             data.forEach(item => {
                 const fila = document.createElement('tr');
 
-                fila.innerHTML = `
-                    <td>${item.codigo}</td>
-                    <td>${formatearNumero(item.diferencia_sf)}</td>
-                    <td>${formatearMoneda(item.costo_sf)}</td>
-                    <td>${item.justificacion_final}</td>
-                `;
+                [item.codigo, formatearNumero(item.diferencia_sf), formatearMoneda(item.costo_sf), item.justificacion_final].forEach(value => {
+                    const cell = document.createElement('td'); cell.textContent = String(value ?? ''); fila.append(cell);
+                });
 
                 tbody.appendChild(fila);
             });
@@ -847,8 +846,8 @@
             });
         }
 
-        async function cargarTopSKUs() {
-            const { data, error } = await construirQueryTopVista();
+        async function cargarTopSKUs(result) {
+            const { data, error } = result;
 
             if (error) {
                 console.error('Error cargando top SKUs desde vista:', error);
@@ -931,14 +930,22 @@
             }
         }
 
+        let dashboardRequest = 0;
         async function aplicarFiltrosDashboard() {
+            const run = ++dashboardRequest;
+            const [top, proveedores, diferencias] = await Promise.all([
+                window.inventoryFetchAll(() => construirQueryTopVista().order('sede').order('id_bodega').order('codigo').order('proveedor')),
+                window.inventoryFetchAll(() => construirQueryProveedorVista().order('sede').order('id_bodega').order('proveedor')),
+                window.inventoryFetchAll(() => construirQueryDiferenciasVista().order('id'))
+            ]);
+            if (run !== dashboardRequest) return;
+            if (obtenerFiltrosActivos().proveedores.length && !diferencias.error) {
+                const codes = new Set((top.data || []).map(row => String(row.codigo)));
+                diferencias.data = (diferencias.data || []).filter(row => codes.has(String(row.codigo)));
+            }
             await Promise.all([
-                cargarTotalSKUs(),
-                cargarValorInventario(),
-                cargarValorDiferencias(),
-                cargarUnidadesPorProveedor(),
-                cargarDiferencias(),
-                cargarTopSKUs()
+                cargarTotalSKUs(top), cargarValorInventario(top), cargarValorDiferencias(diferencias),
+                cargarUnidadesPorProveedor(proveedores), cargarDiferencias(diferencias), cargarTopSKUs(top)
             ]);
         }
 
@@ -963,18 +970,19 @@
             if (auth.status !== 'ok') return;
             window.currentUser = auth.currentUser;
             document.documentElement.style.visibility = 'visible';
-            document.getElementById('logoutBtn')?.addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('../control-tiempos/intranet.html'); });
+            document.getElementById('logoutBtn')?.addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('/intranet/intranet.html'); });
             configurarEventosFiltros();
             await aplicarFiltrosDashboard();
 
             const nombreCorto = document.getElementById('nombreCorto');
 
-            if (nombreCorto && typeof currentUser !== 'undefined' && currentUser?.nombre_corto) {
-                nombreCorto.textContent = currentUser.nombre_corto;
+            if (nombreCorto && window.currentUser?.nombre_corto) {
+                nombreCorto.textContent = window.currentUser.nombre_corto;
             }
         });
     </script>
 </body>
 </html>
+
 
 

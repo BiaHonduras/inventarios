@@ -28,6 +28,7 @@
         import { requireInventorySession, siteCode } from './intranet-session.mjs?v=20261028-audit';
         import * as inventoryTools from './inventory-tools.mjs?v=20261028-audit';
         window.inventoryTools = inventoryTools;
+        window.inventoryHistory = await import('./inventory-history.mjs?v=20261029');
         window.inventoryReadCache = inventoryTools.createReadCache();
         window.inventoryAuthReady = requireInventorySession(supabase);
         window.inventorySiteCode = siteCode;
@@ -2224,7 +2225,7 @@
 		    if (!idStr) return "Sin Bodega"; 
 		
             const stored = (window.bodegasData || []).find(row => String(row.id_bodega).trim() === idStr);
-            const type = stored?.tipos_bodega?.tipos_bodega;
+            const type = typeof stored?.tipos_bodega === 'object' ? stored.tipos_bodega?.tipos_bodega : stored?.tipos_bodega;
             if (type) return type.toUpperCase() === 'PRINCIPAL' ? 'Principal' : type;
 		    for (const sede in bodegasPorSede) {
 		        const bodega = bodegasPorSede[sede].find(b => String(b.value).trim() === idStr);
@@ -2389,6 +2390,7 @@
             
             const auth = await window.inventoryAuthReady;
             if (auth.status !== 'ok') return;
+            document.querySelectorAll('input[type="date"]').forEach(input => { input.value=window.inventoryTools.hondurasDate(); });
             currentUser = auth.currentUser;
             window.currentUser = currentUser;
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -2755,13 +2757,7 @@
 			const tipoBodega = document.getElementById('filtroTipoBodegaResumen')?.value || 'Todas';
 			const fecha = document.getElementById('filtroFechaResumen')?.value || null;
 
-			// Construir query base
-			let query = supabase.from('inventarios_diarios').select('*');
-
-			if (sede !== 'Todas') query = query.eq('sede', sede);
-			if (fecha) query = query.eq('fecha', fecha);
-			// El filtro de tipo de bodega se aplica en JS porque depende del mapping de idBodega
-			const { data, error } = await window.inventoryTools.fetchAllRows(() => query.order('id'));
+			const {data,error}=await window.inventoryHistory.readInventoryDate(supabase,fecha || window.inventoryTools.hondurasDate(),'conteos');
             if (run !== dashboardLoadToken) return;
 
 			if (error) {
@@ -2770,7 +2766,7 @@
 				return;
 			}
 
-			let inventario = data || [];
+			let inventario = window.inventoryHistory.inventoryScope(data||[],{site:sede,type:tipoBodega},window.bodegasData,window.inventorySiteCode);
 
 			// Filtrar por tipo de bodega (si no es 'Todas')
 			if (tipoBodega !== 'Todas') {
@@ -3423,24 +3419,14 @@
 		    const fecha = fechaInput?.value || null;
 		    const searchTerm = (searchInput?.value || '').trim().toLowerCase();
 		
-		    // 3. Construir la consulta a Supabase (solo una vez)
-		    let query = supabase
-		        .from('inventarios_diarios')
-		        .select('*')
-		        .order('codigo', { ascending: true });
-		
-		    // Aplicar filtros que pueden ir en la consulta SQL
-		    if (sede !== 'Todas') {
-		        query = query.eq('sede', sede);
-		    }
-		    if (fecha) {
-		        query = query.eq('fecha', fecha);
-		    }
-		
-		    // 4. Ejecutar la consulta
-		    const { data, error } = await window.inventoryTools.fetchAllRows(() => query.order('id'));
+		    const [countsResult,baseResult] = await Promise.all([
+                window.inventoryHistory.readInventoryDate(supabase,fecha || window.inventoryTools.hondurasDate(),'conteos'),
+                window.inventoryHistory.readInventoryDate(supabase,fecha || window.inventoryTools.hondurasDate(),'base')
+            ]);
+            const {data,error}=countsResult;
             if (run !== inventoryLoadToken) return;
-		    if (error) {
+		    if (error || baseResult.error) {
+                ['skusPendientes','skusInventariados','porcentajeInventarioGeneral'].forEach(id=>document.getElementById(id).textContent='—');
 		        console.error('Error loadInventory:', error);
 		        tbody.innerHTML = `
 		            <tr>
@@ -3457,30 +3443,9 @@
 		    // 5. Inicializar el array con los datos obtenidos
 		    let inventario = Array.isArray(data) ? data : [];
 		
-		    // 6. Filtrar por tipo de bodega (en memoria, porque no es una columna directa)
-		    if (tipoBodegaFiltro !== 'Todas') {
-                inventario = inventario.filter(item => obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodegaFiltro);
-		    }
-		
-		    // 7. Filtrar por término de búsqueda (en memoria)
-		    if (searchTerm) {
-		        inventario = inventario.filter(item => {
-		            const fields = [
-		                item.idBodega,
-		                item.fecha,
-		                item.codigo,
-		                item.codigo_barra,
-		                item.descripcion,
-		                item.proveedor,
-		                item.sede
-		            ];
-		            return fields.some(field =>
-		                String(field || '').toLowerCase().includes(searchTerm)
-		            );
-		        });
-		    }
-		
-		    // 8. Ordenar (numérico si es posible, sino alfabético)
+		    const scope={site:sede,type:tipoBodegaFiltro,search:searchTerm};
+            inventario=window.inventoryHistory.inventoryScope(inventario,scope,window.bodegasData,window.inventorySiteCode);
+            // 8. Ordenar (numérico si es posible, sino alfabético)
 		    inventario.sort((a, b) => {
 		        const codigoA = String(a?.codigo ?? '').trim();
 		        const codigoB = String(b?.codigo ?? '').trim();
@@ -3503,37 +3468,11 @@
 		        const resumenInventariados = document.getElementById('skusInventariados');
 		        const resumenPorcentaje = document.getElementById('porcentajeInventarioGeneral');
 		
-		        const skusImportados = new Set();
-		        const skusInventariadosSet = new Set();
-		
-		        // Obtener todos los códigos de la tabla reportería
-            const { data: dataImportados, error: resumenError } = await window.inventoryTools.fetchAllRows(() => supabase.from('inventario_reporteria').select('codigo,idBodega').order('codigo').order('idBodega'));
-            if (resumenError) throw resumenError;
-            if (run !== inventoryLoadToken) return;
-		
-            (dataImportados || []).filter(item => {
-                const warehouse = (window.bodegasData || []).find(b => String(b.id_bodega) === String(item.idBodega));
-                const siteMatches = sede === 'Todas' || (warehouse && window.inventorySiteCode(warehouse.sede) === window.inventorySiteCode(sede));
-                return siteMatches && (tipoBodegaFiltro === 'Todas' || obtenerTipoBodegaDesdeId(item.idBodega) === tipoBodegaFiltro);
-            }).forEach(item => {
-		            const codigo = String(item.codigo || '').trim();
-		            if (codigo) skusImportados.add(codigo);
-		        });
-		
-		        // Códigos presentes en el inventario actual (ya filtrado)
-		        inventario.forEach(item => {
-		            const codigo = String(item.codigo || '').trim();
-		            if (codigo) skusInventariadosSet.add(codigo);
-		        });
-		
-		        const totalImportados = skusImportados.size;
-		        const totalInventariados = skusInventariadosSet.size;
-		        const totalPendientes = Math.max(totalImportados - totalInventariados, 0);
-		        const porcentaje = totalImportados > 0
-		            ? ((totalInventariados / totalImportados) * 100).toFixed(2)
-		            : '0.00';
-		
-		        if (resumenPendientes) resumenPendientes.textContent = totalPendientes.toLocaleString();
+		        if(baseResult.error)throw baseResult.error;
+                const baseline=window.inventoryHistory.inventoryScope(baseResult.data||[],scope,window.bodegasData,window.inventorySiteCode);
+                const metrics=window.inventoryHistory.inventoryMetrics(baseline,inventario);
+                const totalPendientes=metrics.pending,totalInventariados=metrics.counted,porcentaje=metrics.percent.toFixed(2);
+                if (resumenPendientes) resumenPendientes.textContent = totalPendientes.toLocaleString();
 		        if (resumenInventariados) resumenInventariados.textContent = totalInventariados.toLocaleString();
 		        if (resumenPorcentaje) resumenPorcentaje.textContent = `${porcentaje}%`;
 		
@@ -3584,14 +3523,14 @@
 		                <td class="py-4 px-4 text-center">${diferencia.toFixed(2)}</td>
 		                <td class="py-4 px-4 text-center">${validacion}</td>
 		                <td class="py-4 px-4 text-center">
-		                    <div class="flex justify-center space-x-2">
+		                    ${item._closed || !currentUser.can_write ? '<span class="text-gray-500">Solo lectura</span>' : `<div class="flex justify-center space-x-2">
 		                        <button class="text-blue-600 hover:text-blue-800" aria-label="Editar artículo" title="Editar" onclick="editarArticulo('${escapeAttr(item.id)}')">
 		                            <i class="fas fa-edit"></i>
 		                        </button>
 		                        <button class="text-red-600 hover:text-red-800" aria-label="Eliminar artículo" title="Eliminar" onclick="eliminarArticulo('${escapeAttr(item.id)}')">
 		                            <i class="fas fa-trash"></i>
 		                        </button>
-		                    </div>
+		                    </div>`}
 		                </td>
 		            </tr>
 		        `;
@@ -4602,6 +4541,7 @@ tbody.innerHTML = data.map(item => {
 		
 		    filtrosGlobales.sede = sede;
 		    filtrosGlobales.tipoBodega = tipo;
+            loadTransitos();
 		}
 		
 			async function loadTransitos() {
@@ -4617,20 +4557,8 @@ tbody.innerHTML = data.map(item => {
 			    const tipoBodegaFiltro = tipoBodegaSelect?.value || 'Todas';
 			    const fecha = fechaInput?.value || null;
 			
-			    // 3. Consultar inventarios_diarios con filtros de sede y fecha (en SQL)
-			    let query = supabase
-			        .from('inventarios_diarios')
-			        .select('*');
-			
-			    if (sede !== 'Todas') {
-			        query = query.eq('sede', sede);
-			    }
-			    if (fecha) {
-			        query = query.eq('fecha', fecha);
-			    }
-			
-			    const { data, error } = await query;
-			    if (error) {
+			    const {data,error}=await window.inventoryHistory.readInventoryDate(supabase,fecha || window.inventoryTools.hondurasDate(),'conteos');
+                if (error) {
 			        console.error('Error al obtener inventarios_diarios:', error);
 			        tbody.innerHTML = `
 			            <tr>
@@ -4643,7 +4571,7 @@ tbody.innerHTML = data.map(item => {
 			        return;
 			    }
 			
-			    let inventario = Array.isArray(data) ? data : [];
+			    let inventario = window.inventoryHistory.inventoryScope(Array.isArray(data)?data:[],{site:sede,type:tipoBodegaFiltro},window.bodegasData,window.inventorySiteCode);
 			
 			    // 4. Filtrar por tipo de bodega en memoria (según el código idBodega)
 			    if (tipoBodegaFiltro !== 'Todas') {
@@ -4680,18 +4608,8 @@ tbody.innerHTML = data.map(item => {
 			            .filter(Boolean)
 			    )];
 			
-			    // 7. Consultar inventario_justificaciones para esos códigos y bodegas
-			    let queryJust = supabase
-			        .from('inventario_justificaciones')
-			        .select('*')
-			        .in('codigo', codigosInventario);
-			
-			    if (bodegasInventario.length > 0) {
-			        queryJust = queryJust.in('idBodega', bodegasInventario);
-			    }
-			
-			    const { data: justificaciones, error: errorJust } = await queryJust;
-			    if (errorJust) {
+			    const {data:justificaciones,error:errorJust}=await window.inventoryHistory.readInventoryDate(supabase,fecha || window.inventoryTools.hondurasDate(),'justificaciones');
+                if (errorJust) {
 			        console.error('Error al obtener justificaciones:', errorJust);
 			        tbody.innerHTML = `
 			            <tr>
@@ -4805,7 +4723,7 @@ tbody.innerHTML = data.map(item => {
 			                </td>
 			                <td class="py-3">
 			                    <button type="button"
-			                            class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+			                            ${item._closed || !currentUser.can_write ? 'disabled hidden' : ''} class="btnEditarFila px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
 			                        Editar
 			                    </button>
 			                </td>
@@ -5227,6 +5145,7 @@ tbody.innerHTML = data.map(item => {
         function setEstadoFechaVencimiento(habilitado) {
             const input = document.getElementById('fechaVencimiento');
             input.disabled = !habilitado; input.readOnly = !habilitado;
+            if(habilitado && !input.value)input.value=window.inventoryTools.hondurasDate();
             input.classList.toggle('bg-gray-100', !habilitado);
             input.classList.toggle('input-disabled', !habilitado);
         }

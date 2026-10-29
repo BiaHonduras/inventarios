@@ -27,8 +27,9 @@
         import { supabase, verificarConexion } from './supabase-config.js';
         import { requireInventorySession, siteCode } from './intranet-session.mjs?v=20261028-audit';
         import * as inventoryTools from './inventory-tools.mjs?v=20261028-audit';
+        import * as inventoryHistory from './inventory-history.mjs?v=20261029';
         window.inventoryTools = inventoryTools;
-        window.inventoryHistory = await import('./inventory-history.mjs?v=20261029');
+        window.inventoryHistory = inventoryHistory;
         window.inventoryReadCache = inventoryTools.createReadCache();
         window.inventoryAuthReady = requireInventorySession(supabase);
         window.inventorySiteCode = siteCode;

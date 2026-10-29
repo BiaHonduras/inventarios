@@ -979,7 +979,21 @@
             .assistant-fab { bottom:calc(65px + env(safe-area-inset-bottom)); }
             .assistant-panel { bottom:calc(125px + env(safe-area-inset-bottom)); max-height:calc(100dvh - 145px); }
         }
-</style>
+
+        /* Franja superior compartida con las tarjetas de Devoluciones. */
+        .main-content main .card,.main-content main .card-depuracion,#inventarioResumen>div{border:1px solid #e1e8f0;border-top:3px solid var(--card-accent,#2463dc);border-radius:11px;background:#fff;box-shadow:0 5px 24px #142e5006}
+        .main-content main .card:nth-child(4n+2){--card-accent:#37a59b}
+        .main-content main .card:nth-child(4n+3){--card-accent:#9b80d2}
+        .main-content main .card:nth-child(4n+4){--card-accent:#d8a83a}
+        .main-content main .card:has(#totalVida60){--card-accent:#dc2626}
+        .main-content main .card:has(#totalVida90){--card-accent:#d8a83a}
+        .main-content main .card:has(#totalVida120),.main-content main .card:has(#totalVida121){--card-accent:#37a59b}
+        .main-content main .card:has(#totalSinFecha){--card-accent:#708096}
+        #inventarioResumen>div:nth-child(1){--card-accent:#d8a83a}
+        #inventarioResumen>div:nth-child(2){--card-accent:#37a59b}
+        #inventarioResumen>div:nth-child(3){--card-accent:#2463dc}
+
+    </style>
 </head>
 	
 <body>
@@ -5258,3 +5272,4 @@ tbody.innerHTML = data.map(item => {
 
 </body>
 </html>
+

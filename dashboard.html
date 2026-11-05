@@ -4893,7 +4893,7 @@ tbody.innerHTML = data.map(item => {
 	
 
         async function cargarBodegas() {
-            const {data,error} = await supabase.from('bodegas').select('id_bodega,sede,nombre,tipos_bodega(tipos_bodega,maneja_vencimiento)').order('sede').order('id_bodega');
+            const {data,error} = await supabase.from('bodegas').select('id_bodega,sede,nombre,tipos_bodega,tipo_bodega:tipos_bodega(tipos_bodega,maneja_vencimiento)').order('sede').order('id_bodega');
             if (error) { showNotification('Bodegas','No se pudieron cargar las bodegas. Actualiza la página para reintentar.','error'); return; }
             window.bodegasData = (data || []).filter(bodega => currentUser.sedes.includes(window.inventorySiteCode(bodega.sede)));
             actualizarBodegasPorSede();
@@ -4906,9 +4906,10 @@ tbody.innerHTML = data.map(item => {
             rows.forEach(bodega => {
                 const option = document.createElement('option');
                 option.value = bodega.id_bodega;
-                const type = bodega.tipos_bodega?.tipos_bodega || '';
-                option.textContent = `${bodega.id_bodega} - ${bodega.nombre !== bodega.id_bodega ? bodega.nombre : type}`;
-                option.dataset.manejaVencimiento = String(bodega.tipos_bodega?.maneja_vencimiento === true);
+                const type = String(bodega.tipos_bodega || bodega.tipo_bodega?.tipos_bodega || '').trim().toUpperCase();
+                const labels = { PRINCIPAL: 'Principal', PPV: 'PPV', PFN: 'PFN', TRANSITO: 'Tránsito' };
+                option.textContent = labels[type] || 'Sin tipo';
+                option.dataset.manejaVencimiento = String(bodega.tipo_bodega?.maneja_vencimiento === true);
                 select.append(option);
             });
             select.disabled = rows.length === 0;
